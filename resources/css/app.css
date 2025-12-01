@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    /* Paleta del logo */
+    --color-primary: #2281A7;      /* azul celeste intenso */
+    --color-primary-600: #17404C;  /* azul profundo */
+    --color-accent: #359360;       /* verde azulado */
+    --color-surface: #0E252F;      /* azul petróleo oscuro */
+    --color-muted: color-mix(in oklch, #0E252F 70%, #2281A7 30%);
+
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+    body {
+        background: radial-gradient(circle at 15% 20%, color-mix(in oklch, var(--color-primary) 25%, white 75%), transparent 30%),
+                    radial-gradient(circle at 85% 10%, color-mix(in oklch, var(--color-accent) 25%, white 75%), transparent 30%),
+                    linear-gradient(180deg, color-mix(in oklch, var(--color-surface) 85%, black 15%), #0B1A20);
+        color: #e6f1f5;
+    }
+
+    a {
+        color: var(--color-primary);
+    }
+
+    a:hover {
+        color: var(--color-accent);
+    }
+}
+
+@layer components {
+    /* Tarjetas del dashboard en estilo "tiles" */
+    .fi-wi-stats-overview {
+        gap: 1rem;
+    }
+
+    .fi-wi-stats-overview-stat {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+        color: #f8fbff;
+    }
+
+    .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-label,
+    .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-value,
+    .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-description {
+        color: #f8fbff;
+    }
+
+    .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-label-ctn svg {
+        color: #f8fbff;
+    }
+
+    .tile-primary { background: linear-gradient(135deg, var(--color-primary), color-mix(in oklch, var(--color-primary) 60%, #4fd1c5 40%)); }
+    .tile-deep    { background: linear-gradient(135deg, var(--color-primary-600), color-mix(in oklch, var(--color-primary-600) 70%, var(--color-primary) 30%)); }
+    .tile-surface { background: linear-gradient(135deg, var(--color-surface), color-mix(in oklch, var(--color-surface) 60%, var(--color-primary) 40%)); }
+    .tile-accent  { background: linear-gradient(135deg, var(--color-accent), color-mix(in oklch, var(--color-accent) 70%, #5ae6b5 30%)); }
+    .tile-green   { background: linear-gradient(135deg, var(--color-accent), color-mix(in oklch, var(--color-primary) 40%, var(--color-accent) 60%)); }
+    .tile-muted   { background: linear-gradient(135deg, var(--color-muted), color-mix(in oklch, var(--color-muted) 60%, var(--color-primary) 40%)); }
+}
