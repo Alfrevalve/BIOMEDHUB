@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Cirugias\Schemas;
 
+use App\Enums\CirugiaEstado;
+use App\Enums\CirugiaTipo;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -23,25 +25,13 @@ class CirugiaForm
                 DateTimePicker::make('fecha_programada')
                     ->required(),
                 Select::make('estado')
-                    ->options([
-            'Pendiente' => 'Pendiente',
-            'En curso' => 'En curso',
-            'Cerrada' => 'Cerrada',
-            'Reprogramada' => 'Reprogramada',
-            'Cancelada' => 'Cancelada',
-        ])
+                    ->options(CirugiaEstado::options())
                     ->default('Pendiente')
                     ->required(),
                 TextInput::make('cirujano_principal'),
                 TextInput::make('instrumentista_asignado'),
                 Select::make('tipo')
-                    ->options([
-            'Craneo' => 'Craneo',
-            'Columna' => 'Columna',
-            'Tumor' => 'Tumor',
-            'Pediatrica' => 'Pediatrica',
-            'Otro' => 'Otro',
-        ])
+                    ->options(CirugiaTipo::options())
                     ->default('Craneo')
                     ->required(),
                 Toggle::make('crear_pedido_auto')

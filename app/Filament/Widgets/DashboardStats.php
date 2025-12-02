@@ -2,10 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\Cirugias\CirugiaResource;
-use App\Filament\Resources\Equipos\EquipoResource;
-use App\Filament\Resources\Movimientos\MovimientoResource;
-use App\Filament\Resources\Pedidos\PedidoResource;
 use App\Models\Cirugia;
 use App\Models\Equipo;
 use App\Models\Movimiento;

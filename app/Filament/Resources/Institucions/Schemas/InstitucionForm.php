@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Institucions\Schemas;
 
+use App\Enums\InstitucionTipo;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -15,8 +16,8 @@ class InstitucionForm
                 TextInput::make('nombre')
                     ->required(),
                 Select::make('tipo')
-                    ->options(['Publica' => 'Publica', 'Privada' => 'Privada', 'Militar' => 'Militar', 'ONG' => 'ONG'])
-                    ->default('Publica')
+                    ->options(InstitucionTipo::options())
+                    ->default(InstitucionTipo::Publica->value)
                     ->required(),
                 TextInput::make('ciudad'),
                 TextInput::make('direccion'),

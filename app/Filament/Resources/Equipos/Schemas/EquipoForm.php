@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Equipos\Schemas;
 
+use App\Enums\EquipoEstado;
+use App\Enums\EquipoTipo;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -17,27 +19,17 @@ class EquipoForm
                     ->required(),
                 TextInput::make('codigo_interno'),
                 Select::make('tipo')
-                    ->options([
-            'Craneo' => 'Craneo',
-            'Columna' => 'Columna',
-            'Motor' => 'Motor',
-            'Consola' => 'Consola',
-            'Fresas' => 'Fresas',
-        ])
-                    ->default('Craneo')
+                    ->options(EquipoTipo::options())
+                    ->default(EquipoTipo::Craneo->value)
                     ->required(),
                 Select::make('estado_actual')
-                    ->options([
-            'Disponible' => 'Disponible',
-            'En cirugia' => 'En cirugia',
-            'Asignado' => 'Asignado',
-            'En mantenimiento' => 'En mantenimiento',
-            'En transito' => 'En transito',
-        ])
-                    ->default('Disponible')
+                    ->options(EquipoEstado::options())
+                    ->default(EquipoEstado::Disponible->value)
                     ->required(),
-                TextInput::make('institucion_id')
-                    ->numeric(),
+                Select::make('institucion_id')
+                    ->relationship('institucion', 'nombre')
+                    ->label('Institución')
+                    ->searchable(),
                 TextInput::make('marca_modelo'),
                 TextInput::make('serie'),
                 TextInput::make('responsable_actual'),

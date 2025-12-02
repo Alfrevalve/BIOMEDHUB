@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\Institucions\Tables;
 
+use App\Enums\InstitucionTipo;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class InstitucionsTable
@@ -34,7 +36,7 @@ class InstitucionsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('tipo')->options(InstitucionTipo::options()),
             ])
             ->recordActions([
                 EditAction::make(),

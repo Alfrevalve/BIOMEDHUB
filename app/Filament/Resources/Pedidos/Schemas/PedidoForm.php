@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Pedidos\Schemas;
 
+use App\Enums\PedidoEstado;
+use App\Enums\PedidoPrioridad;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -15,26 +17,19 @@ class PedidoForm
         return $schema
             ->components([
                 Select::make('cirugia_id')
-                    ->relationship('cirugia', 'id')
+                    ->relationship('cirugia', 'nombre')
                     ->required(),
                 TextInput::make('codigo_pedido')
-                    ->required(),
+                    ->hint('Se genera automáticamente si se deja vacío')
+                    ->unique(ignoreRecord: true),
                 DatePicker::make('fecha'),
                 DateTimePicker::make('fecha_entrega'),
                 Select::make('estado')
-                    ->options([
-            'Solicitado' => 'Solicitado',
-            'Preparacion' => 'Preparacion',
-            'Despachado' => 'Despachado',
-            'Entregado' => 'Entregado',
-            'Devuelto' => 'Devuelto',
-            'Anulado' => 'Anulado',
-            'Observado' => 'Observado',
-        ])
+                    ->options(PedidoEstado::options())
                     ->default('Solicitado')
                     ->required(),
                 Select::make('prioridad')
-                    ->options(['Alta' => 'Alta', 'Media' => 'Media', 'Baja' => 'Baja'])
+                    ->options(PedidoPrioridad::options())
                     ->default('Alta')
                     ->required(),
                 TextInput::make('entrega_a'),

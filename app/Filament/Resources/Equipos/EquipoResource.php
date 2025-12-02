@@ -20,7 +20,7 @@ class EquipoResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
 
-    protected static ?string $recordTitleAttribute = 'codigo';
+    protected static ?string $recordTitleAttribute = 'nombre';
 
     public static function form(Schema $schema): Schema
     {

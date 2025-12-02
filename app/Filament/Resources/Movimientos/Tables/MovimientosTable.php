@@ -2,10 +2,14 @@
 
 namespace App\Filament\Resources\Movimientos\Tables;
 
+use App\Enums\MovimientoEstado;
+use App\Enums\MovimientoMotivo;
+use App\Enums\MovimientoServicio;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class MovimientosTable
@@ -14,17 +18,22 @@ class MovimientosTable
     {
         return $table
             ->columns([
-                TextColumn::make('equipo_id')
-                    ->numeric()
+                TextColumn::make('equipo.nombre')
+                    ->label('Equipo')
+                    ->searchable()
                     ->sortable(),
-                TextColumn::make('institucion_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('cirugia_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('nombre')
+                TextColumn::make('institucion.nombre')
+                    ->label('Institución')
+                    ->sortable()
                     ->searchable(),
+                TextColumn::make('cirugia.nombre')
+                    ->label('Cirugía')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('nombre')
+                    ->label('Movimiento')
+                    ->searchable()
+                    ->limit(40),
                 TextColumn::make('fecha_salida')
                     ->dateTime()
                     ->sortable(),
@@ -53,7 +62,9 @@ class MovimientosTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('estado_mov')->options(MovimientoEstado::options()),
+                SelectFilter::make('motivo')->options(MovimientoMotivo::options()),
+                SelectFilter::make('servicio')->options(MovimientoServicio::options()),
             ])
             ->recordActions([
                 EditAction::make(),

@@ -4,7 +4,6 @@ namespace App\Actions;
 
 use App\Models\Cirugia;
 use App\Models\Pedido;
-use Illuminate\Support\Str;
 
 class CrearPedidoDesdeCirugia
 {
@@ -28,7 +27,7 @@ class CrearPedidoDesdeCirugia
 
         return Pedido::create([
             'cirugia_id'    => $cirugia->id,
-            'codigo_pedido' => 'PD-AUTO-' . now('America/Lima')->format('Ymd-Hi') . '-' . Str::upper(Str::random(4)),
+            'codigo_pedido' => Pedido::generateCode(),
             'fecha'         => now('America/Lima')->toDateString(),
             'fecha_entrega' => $fechaEntrega,
             'estado'        => 'Solicitado',

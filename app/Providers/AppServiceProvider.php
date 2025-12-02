@@ -21,5 +21,6 @@ class AppServiceProvider extends ServiceProvider
     {
         // Registrar observer de Cirugias
         \App\Models\Cirugia::observe(\App\Observers\CirugiaObserver::class);
+        \App\Models\Movimiento::observe(\App\Observers\MovimientoObserver::class);
     }
 }

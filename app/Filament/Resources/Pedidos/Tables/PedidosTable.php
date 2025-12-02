@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\Pedidos\Tables;
 
+use App\Enums\PedidoEstado;
+use App\Enums\PedidoPrioridad;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class PedidosTable
@@ -14,7 +17,8 @@ class PedidosTable
     {
         return $table
             ->columns([
-                TextColumn::make('cirugia.id')
+                TextColumn::make('cirugia.nombre')
+                    ->label('Cirugía')
                     ->searchable(),
                 TextColumn::make('codigo_pedido')
                     ->searchable(),
@@ -42,7 +46,8 @@ class PedidosTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('estado')->options(PedidoEstado::options()),
+                SelectFilter::make('prioridad')->options(PedidoPrioridad::options()),
             ])
             ->recordActions([
                 EditAction::make(),

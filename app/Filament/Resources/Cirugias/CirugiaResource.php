@@ -20,7 +20,7 @@ class CirugiaResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedHeart;
 
-    protected static ?string $recordTitleAttribute = 'paciente';
+    protected static ?string $recordTitleAttribute = 'nombre';
 
     public static function form(Schema $schema): Schema
     {

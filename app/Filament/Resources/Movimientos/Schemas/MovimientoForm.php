@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Movimientos\Schemas;
 
+use App\Enums\MovimientoEstado;
+use App\Enums\MovimientoMotivo;
+use App\Enums\MovimientoServicio;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
@@ -25,38 +28,21 @@ class MovimientoForm
                     ->relationship('cirugia', 'nombre')
                     ->searchable(),
                 TextInput::make('nombre')
-                    ->required(),
+                    ->placeholder('Se autogenera si se deja vacío'),
                 DateTimePicker::make('fecha_salida')
                     ->required(),
                 DateTimePicker::make('fecha_retorno'),
                 Select::make('estado_mov')
-                    ->options([
-            'Programado' => 'Programado',
-            'En uso' => 'En uso',
-            'Devuelto' => 'Devuelto',
-            'Observado' => 'Observado',
-        ])
-                    ->default('Programado')
+                    ->options(MovimientoEstado::options())
+                    ->default(MovimientoEstado::Programado->value)
                     ->required(),
                 Select::make('motivo')
-                    ->options([
-            'Cirugia' => 'Cirugia',
-            'Prestamo' => 'Prestamo',
-            'Consignacion' => 'Consignacion',
-            'Mantenimiento' => 'Mantenimiento',
-            'Demostracion' => 'Demostracion',
-        ])
-                    ->default('Cirugia')
+                    ->options(MovimientoMotivo::options())
+                    ->default(MovimientoMotivo::Cirugia->value)
                     ->required(),
                 Select::make('servicio')
-                    ->options([
-            'Neuro' => 'Neuro',
-            'Columna' => 'Columna',
-            'Maxilofacial' => 'Maxilofacial',
-            'OTORRINO' => 'OTORRINO',
-            'Otro' => 'Otro',
-        ])
-                    ->default('Neuro')
+                    ->options(MovimientoServicio::options())
+                    ->default(MovimientoServicio::Neuro->value)
                     ->required(),
                 TagsInput::make('material_enviado')
                     ->placeholder('Agregar item')
