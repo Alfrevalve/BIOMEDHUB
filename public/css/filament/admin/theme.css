@@ -34,3 +34,85 @@
 .tile-accent  { background: linear-gradient(135deg, var(--color-accent), color-mix(in oklch, var(--color-accent) 70%, #5ae6b5 30%)); }
 .tile-green   { background: linear-gradient(135deg, var(--color-accent), color-mix(in oklch, var(--color-primary) 40%, var(--color-accent) 60%)); }
 .tile-muted   { background: linear-gradient(135deg, var(--color-muted), color-mix(in oklch, var(--color-muted) 60%, var(--color-primary) 40%)); }
+
+/* Login: fondo y tarjeta */
+.fi-simple-page {
+    min-height: 100vh;
+    padding: 3rem 1.25rem;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at 20% 20%, color-mix(in oklch, var(--color-primary) 24%, white 76%), transparent 38%),
+        radial-gradient(circle at 80% 10%, color-mix(in oklch, var(--color-accent) 24%, white 76%), transparent 38%),
+        linear-gradient(160deg, color-mix(in oklch, var(--color-surface) 90%, black 10%), #0B1A20);
+}
+
+.fi-simple-page-content {
+    width: min(480px, 100%);
+    margin: 0 auto;
+    background: rgba(14, 37, 47, 0.82);
+    border: 1px solid rgba(53, 147, 96, 0.25);
+    border-radius: 18px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+    padding: 2rem 2.5rem;
+}
+
+.fi-simple-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    color: #e9f4f8;
+}
+
+.fi-simple-header-heading {
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.fi-simple-header-subheading {
+    color: color-mix(in oklch, #e9f4f8 70%, #8fb7c3 30%);
+    font-size: 0.95rem;
+}
+
+.fi-simple-page input,
+.fi-simple-page .fi-input,
+.fi-simple-page select {
+    background: rgba(23, 64, 76, 0.6);
+    border: 1px solid rgba(34, 129, 167, 0.35);
+    color: #e9f4f8;
+    border-radius: 10px;
+}
+
+.fi-simple-page input:focus,
+.fi-simple-page .fi-input:focus,
+.fi-simple-page select:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-accent) 30%, transparent);
+}
+
+.fi-simple-page button[type="submit"],
+.fi-simple-page .fi-btn {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    color: #0b1a20;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(34, 129, 167, 0.35);
+}
+
+.fi-simple-page button[type="submit"]:hover,
+.fi-simple-page .fi-btn:hover {
+    background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+    transform: translateY(-1px);
+}
+
+.fi-simple-page a {
+    color: var(--color-primary);
+}
+
+.fi-simple-page a:hover {
+    color: var(--color-accent);
+}
