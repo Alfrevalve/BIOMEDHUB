@@ -25,7 +25,7 @@ class MovimientoObserver
             return;
         }
 
-        // Mapear estado del movimiento a estado del equipo y ubicación.
+        // Mapear estado del movimiento a estado del equipo.
         $nuevoEstadoEquipo = match ($movimiento->estado_mov) {
             MovimientoEstado::Programado->value => EquipoEstado::Asignado->value,
             MovimientoEstado::EnUso->value => EquipoEstado::EnCirugia->value,
@@ -36,11 +36,13 @@ class MovimientoObserver
         $equipo->estado_actual = $nuevoEstadoEquipo;
 
         if (in_array($movimiento->estado_mov, [MovimientoEstado::Programado->value, MovimientoEstado::EnUso->value], true)) {
+            // Mantener la institución de destino actualizada incluso si sólo cambia la institución.
             $equipo->institucion_id = $movimiento->institucion_id;
         }
 
         if ($movimiento->estado_mov === MovimientoEstado::Devuelto->value) {
-            $equipo->institucion_id = null;
+            // Si hay centro configurado, úsalo; si no, se deja sin ubicación explícita.
+            $equipo->institucion_id = config('biomedhub.centro_institucion_id') ?: null;
 
             if (! $movimiento->fecha_retorno) {
                 $movimiento->updateQuietly([

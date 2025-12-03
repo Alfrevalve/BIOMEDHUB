@@ -49,11 +49,6 @@ class EnviarDigestOperativo extends Command
             ->map(fn ($e) => trim($e))
             ->filter();
 
-        if ($to->isEmpty()) {
-            $this->error('Configura al menos un destinatario en --to= o DIGEST_TO');
-            return self::FAILURE;
-        }
-
         $payload = [
             'fecha'     => $hoy->locale('es')->isoFormat('DD [de] MMMM [de] YYYY'),
             'cirugias'  => $cirugias,
@@ -65,6 +60,15 @@ class EnviarDigestOperativo extends Command
         ];
 
         $subject = 'Digest diario BIOMED HUB - ' . $hoy->format('d/m/Y');
+
+        if ($to->isEmpty()) {
+            $this->warn('Sin destinatarios (--to= o DIGEST_TO). Se envía al mailer de log para no fallar el cron.');
+            $mailer = config('mail.fallback_mailer') ?? 'log';
+            Mail::mailer($mailer)
+                ->to('digest-log@localhost')
+                ->queue(new DigestOperativoMailable($payload, $subject));
+            return self::SUCCESS;
+        }
 
         Mail::to($to->all())->queue(new DigestOperativoMailable($payload, $subject));
 

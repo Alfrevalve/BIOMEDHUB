@@ -22,18 +22,31 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
+        $user = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
 
         // Datos operativos mínimos para desarrollo
         $instituciones = Institucion::factory(3)->create();
-        Equipo::factory(5)->create();
-        Cirugia::factory(4)->create();
-        Pedido::factory(4)->create();
-        Movimiento::factory(3)->create([
-            'institucion_id' => $instituciones->random()->id,
-        ]);
+        $equipos = Equipo::factory(5)->create();
+        $cirugias = Cirugia::factory(4)->create();
+
+        // Pedidos coherentes con las cirugías creadas
+        foreach ($cirugias as $cirugia) {
+            Pedido::factory()->create([
+                'cirugia_id' => $cirugia->id,
+            ]);
+        }
+
+        // Movimientos con equipos e instituciones existentes
+        foreach ($equipos->take(3) as $equipo) {
+            Movimiento::factory()->create([
+                'equipo_id' => $equipo->id,
+                'institucion_id' => $instituciones->random()->id,
+            ]);
+        }
+
+        $this->call(RolesSeeder::class);
     }
 }

@@ -38,7 +38,18 @@ class Pedido extends Model
 
     public static function generateCode(): string
     {
-        return 'PD-' . now('America/Lima')->format('Ymd-Hi') . '-' . Str::upper(Str::random(4));
+        $base = 'PD-' . now('America/Lima')->format('Ymd-Hi');
+
+        // Intentar hasta 5 veces para evitar colisiones en concurrencia.
+        for ($i = 0; $i < 5; $i++) {
+            $code = $base . '-' . Str::upper(Str::random(5));
+            if (! self::where('codigo_pedido', $code)->exists()) {
+                return $code;
+            }
+        }
+
+        // Último recurso: timestamp único.
+        return $base . '-' . Str::upper(Str::random(8));
     }
 
     /** Relaciones */
