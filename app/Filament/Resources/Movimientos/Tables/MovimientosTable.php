@@ -63,12 +63,22 @@ class MovimientosTable
                     ->label('Institucion')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('pedido.codigo_pedido')
+                    ->label('Pedido')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('entregado_por')
                     ->label('Entregado por')
                     ->searchable(),
                 TextColumn::make('recibido_por')
                     ->label('Recibido por')
                     ->searchable(),
+                TextColumn::make('transportista')
+                    ->label('Transportista')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('transportista_contacto')
+                    ->label('Contacto transportista')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('cirugia.nombre')
                     ->label('Cirugia')
                     ->searchable()
@@ -76,6 +86,27 @@ class MovimientosTable
                 TextColumn::make('documento_soporte')
                     ->label('Documento')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('recogida_solicitada_at')
+                    ->label('Recojo solicitado')
+                    ->dateTime()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('antiguedad_recojo')
+                    ->label('Antiguedad')
+                    ->badge()
+                    ->color(function ($record) {
+                        $date = $record->recogida_solicitada_at;
+                        if (! $date) {
+                            return 'gray';
+                        }
+                        $hours = now()->diffInHours($date);
+                        return $hours > 48 ? 'danger' : ($hours > 24 ? 'warning' : 'success');
+                    })
+                    ->formatStateUsing(function ($record) {
+                        return $record->recogida_solicitada_at
+                            ? $record->recogida_solicitada_at->diffForHumans()
+                            : 'Sin fecha';
+                    })
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->label('Creado')
@@ -126,6 +157,22 @@ class MovimientosTable
                             $recipients = User::role(['logistica', 'soporte_biomedico'])->get();
                             if ($recipients->isNotEmpty()) {
                                 Notification::send($recipients, new RecogidaMaterialNotification($record));
+                            }
+                        }),
+                    Action::make('marcar_recogido')
+                        ->label('Marcar recogido')
+                        ->icon('heroicon-o-check')
+                        ->color('success')
+                        ->visible(fn ($record) => $record->recogida_solicitada_at !== null)
+                        ->requiresConfirmation()
+                        ->action(function ($record) {
+                            $record->update([
+                                'estado_mov' => 'Devuelto',
+                                'fecha_retorno' => $record->fecha_retorno ?: now(),
+                            ]);
+
+                            if ($record->pedido && $record->pedido->estado !== 'Devuelto') {
+                                $record->pedido->update(['estado' => 'Devuelto']);
                             }
                         }),
                     Action::make('confirmar_devolucion')

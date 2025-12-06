@@ -50,12 +50,12 @@ class PedidoResource extends Resource
 
     protected static function canManage(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'logistica']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'almacen', 'facturacion', 'soporte_biomedico']) ?? false;
     }
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'auditoria']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'auditoria', 'almacen', 'facturacion', 'soporte_biomedico', 'comercial']) ?? false;
     }
 
     public static function canCreate(): bool

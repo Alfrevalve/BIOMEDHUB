@@ -228,12 +228,19 @@ class ListInstitucions extends ListRecords
                             $horario = $get('horario');
                         }
 
+                        $tipoBase = $normalizeTipo($get('tipo'));
+                        $nombreLower = strtolower($nombreClave);
+                        $clasifLower = strtolower((string) $get('clasificacion'));
+                        if (str_contains($nombreLower, 'clinica') || str_contains($nombreLower, 'clínica') || str_contains($clasifLower, 'clinica') || str_contains($clasifLower, 'clínica')) {
+                            $tipoBase = 'Privada';
+                        }
+
                         $payload = [
                             'nombre' => $nombreClave,
                             'codigo_unico' => $get('codigo_unico'),
                             'nombre_establecimiento' => $get('nombre_establecimiento'),
                             'clasificacion' => $get('clasificacion'),
-                            'tipo' => $normalizeTipo($get('tipo')),
+                            'tipo' => $tipoBase,
                             'departamento' => $get('departamento'),
                             'provincia' => $get('provincia'),
                             'distrito' => $get('distrito'),

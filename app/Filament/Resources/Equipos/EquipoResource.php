@@ -50,12 +50,12 @@ class EquipoResource extends Resource
 
     protected static function canManage(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'logistica']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'soporte_biomedico']) ?? false;
     }
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'auditoria', 'soporte_biomedico']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'auditoria', 'soporte_biomedico', 'almacen']) ?? false;
     }
 
     public static function canCreate(): bool

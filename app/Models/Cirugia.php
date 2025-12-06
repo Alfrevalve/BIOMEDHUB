@@ -20,6 +20,7 @@ class Cirugia extends Model
         'estado',
         'cirujano_principal',
         'instrumentista_asignado',
+        'instrumentista_id',
         'tipo',
         'crear_pedido_auto',
         'paciente_codigo',
@@ -43,9 +44,23 @@ class Cirugia extends Model
         return $this->belongsTo(\App\Models\Institucion::class);
     }
 
+    public function instrumentista()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'instrumentista_id');
+    }
+
     public function reportes()
     {
         return $this->hasMany(\App\Models\CirugiaReporte::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Cirugia $cirugia) {
+            if ($cirugia->instrumentista && $cirugia->isDirty('instrumentista_id')) {
+                $cirugia->instrumentista_asignado = $cirugia->instrumentista->name;
+            }
+        });
     }
 
     /** Scopes operativos */

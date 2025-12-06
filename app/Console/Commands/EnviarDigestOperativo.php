@@ -67,10 +67,18 @@ class EnviarDigestOperativo extends Command
             Mail::mailer($mailer)
                 ->to('digest-log@localhost')
                 ->queue(new DigestOperativoMailable($payload, $subject));
-            return self::SUCCESS;
+        } else {
+            Mail::to($to->all())->queue(new DigestOperativoMailable($payload, $subject));
         }
 
-        Mail::to($to->all())->queue(new DigestOperativoMailable($payload, $subject));
+        // Resumen opcional para facturación
+        $toFact = collect(explode(',', env('DIGEST_FACT_TO', '')))
+            ->map(fn ($e) => trim($e))
+            ->filter();
+        if ($toFact->isNotEmpty()) {
+            $subjectFact = 'Resumen facturación - ' . $hoy->format('d/m/Y');
+            Mail::to($toFact->all())->queue(new DigestOperativoMailable($payload, $subjectFact));
+        }
 
         $this->info("Digest enviado: Cirugías={$payload['totalCir']} | Pedidos={$payload['totalPed']} | Atrasados={$payload['totalAtr']}");
         return self::SUCCESS;

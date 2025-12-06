@@ -20,15 +20,25 @@ class Pedido extends Model
         'codigo_pedido',
         'fecha',
         'fecha_entrega',
+        'listo_despacho_at',
+        'entregado_en_institucion_at',
         'estado',
         'prioridad',
         'entrega_a',
         'responsable',
+        'transportista',
+        'transportista_contacto',
+        'material_detalle',
+        'equipo_detalle',
     ];
 
     protected $casts = [
         'fecha'         => 'date',
         'fecha_entrega' => 'datetime',
+        'listo_despacho_at' => 'datetime',
+        'entregado_en_institucion_at' => 'datetime',
+        'material_detalle' => 'array',
+        'equipo_detalle' => 'array',
     ];
 
     protected static function booted(): void

@@ -5,8 +5,10 @@ namespace App\Filament\Widgets;
 use App\Filament\Resources\Cirugias\CirugiaResource;
 use App\Filament\Resources\Equipos\EquipoResource;
 use App\Filament\Resources\Movimientos\MovimientoResource;
+use App\Filament\Resources\Movimientos\Pages\RecojosPendientes;
 use App\Filament\Resources\Pedidos\PedidoResource;
 use App\Models\Cirugia;
+use App\Models\CirugiaReporte;
 use App\Models\Equipo;
 use App\Models\Item;
 use App\Models\Movimiento;
@@ -67,7 +69,40 @@ class DashboardStats extends BaseWidget
             ->whereRaw("{$stockExpr} <= 5")
             ->count();
 
+        $listosDespacho = Pedido::query()
+            ->whereNotNull('listo_despacho_at')
+            ->whereIn('estado', ['Solicitado', 'Preparacion', 'Despachado'])
+            ->count();
+
+        $recojosSolicitados = Movimiento::query()
+            ->whereNotNull('recogida_solicitada_at')
+            ->whereIn('estado_mov', ['Devuelto', 'En uso', 'Programado'])
+            ->count();
+
+        $consumosSinFacturar = CirugiaReporte::query()
+            ->whereHas('cirugia.pedidos', fn ($q) => $q->whereNotIn('estado', ['Devuelto', 'Anulado']))
+            ->count();
+
         return [
+            Stat::make('Listos para despacho', $listosDespacho)
+                ->description('Pedidos marcados listos')
+                ->icon('heroicon-o-bell-alert')
+                ->url(PedidoResource::getUrl())
+                ->extraAttributes(['style' => 'background:linear-gradient(135deg,#0ea5e9,#14b8a6);color:#fff']),
+            Stat::make('Recojos solicitados', $recojosSolicitados)
+                ->description('Pendientes de recoger')
+                ->icon('heroicon-o-truck')
+                ->url(RecojosPendientes::getUrl())
+                ->extraAttributes(['style' => $recojosSolicitados > 0
+                    ? 'background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff'
+                    : 'background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff']),
+            Stat::make('Consumidos sin facturar', $consumosSinFacturar)
+                ->description('Reportes con pedido activo')
+                ->icon('heroicon-o-document-check')
+                ->url(\App\Filament\Resources\CirugiaReportes\CirugiaReporteResource::getUrl())
+                ->extraAttributes(['style' => $consumosSinFacturar > 0
+                    ? 'background:linear-gradient(135deg,#e11d48,#be123c);color:#fff'
+                    : 'background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff']),
             Stat::make('Cirugias hoy', $cirugiasHoy)
                 ->description('Programadas hoy')
                 ->icon('heroicon-o-heart')

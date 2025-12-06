@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Cirugias\Schemas;
 
 use App\Enums\CirugiaEstado;
 use App\Enums\CirugiaTipo;
+use App\Models\User;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -29,7 +30,21 @@ class CirugiaForm
                     ->default('Pendiente')
                     ->required(),
                 TextInput::make('cirujano_principal'),
-                TextInput::make('instrumentista_asignado'),
+                Select::make('instrumentista_id')
+                    ->label('Instrumentista')
+                    ->options(fn () => User::role('instrumentista')->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        $user = $state ? User::find($state) : null;
+                        if ($user) {
+                            $set('instrumentista_asignado', $user->name);
+                        }
+                    }),
+                TextInput::make('instrumentista_asignado')
+                    ->label('Instrumentista (texto)')
+                    ->helperText('Se autocompleta al elegir usuario'),
                 Select::make('tipo')
                     ->options(CirugiaTipo::options())
                     ->default('Craneo')

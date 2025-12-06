@@ -5,6 +5,11 @@ namespace App\Filament\Resources\Cirugias\Tables;
 use App\Enums\CirugiaEstado;
 use App\Enums\CirugiaTipo;
 use App\Models\CirugiaReporte;
+use App\Models\User;
+use App\Notifications\CirugiaConsumoNotification;
+use App\Notifications\CirugiaConsumoFacturacionNotification;
+use App\Notifications\RecogidaMaterialNotification;
+use App\Models\Movimiento;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -20,6 +25,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Notification;
 
 class CirugiasTable
 {
@@ -111,6 +117,18 @@ class CirugiasTable
                         ->label('Reporte de cirugia')
                         ->color('success')
                         ->icon('heroicon-o-clipboard-document-list')
+                        ->visible(function ($record) {
+                            $user = auth()->user();
+                            if (! $user) {
+                                return false;
+                            }
+
+                            if ($user->hasRole('instrumentista')) {
+                                return $record?->instrumentista_id === $user->id;
+                            }
+
+                            return true;
+                        })
                         ->form([
                             DateTimePicker::make('hora_programada')
                                 ->label('Hora programada')
@@ -146,7 +164,7 @@ class CirugiasTable
                         ->action(function ($record, array $data) {
                             $record->update(['estado' => CirugiaEstado::Cerrada->value]);
 
-                            CirugiaReporte::create([
+                            $reporte = CirugiaReporte::create([
                                 'cirugia_id'      => $record->id,
                                 'institucion'     => $record->institucion?->nombre,
                                 'paciente'        => $data['paciente'] ?? $record->paciente_codigo,
@@ -157,6 +175,43 @@ class CirugiasTable
                                 'notas'           => $data['notas'] ?? null,
                                 'evidencia_path'  => $data['evidencia_path'] ?? null,
                             ]);
+
+                            $recipients = User::role(['logistica', 'soporte_biomedico', 'comercial', 'almacen'])->get();
+                            if ($recipients->isNotEmpty()) {
+                                Notification::send($recipients, new CirugiaConsumoNotification($record, $reporte));
+                            }
+                            $facturacion = User::role(['facturacion'])->get();
+                            if ($facturacion->isNotEmpty()) {
+                                Notification::send($facturacion, new CirugiaConsumoFacturacionNotification($record, $reporte));
+                            }
+
+                            // Auto-solicitar recogida sobre el ultimo movimiento asociado.
+                            $movimiento = Movimiento::where('cirugia_id', $record->id)
+                                ->latest('fecha_salida')
+                                ->first();
+
+                            if ($movimiento) {
+                                $materialUsado = [];
+                                if (! empty($reporte->consumo)) {
+                                    $materialUsado = collect(explode(',', $reporte->consumo))
+                                        ->map(fn ($item) => trim($item))
+                                        ->filter()
+                                        ->values()
+                                        ->all();
+                                }
+
+                                $movimiento->update([
+                                    'material_usado' => $materialUsado,
+                                    'estado_mov' => 'Devuelto',
+                                    'fecha_retorno' => $movimiento->fecha_retorno ?: now(),
+                                    'recogida_solicitada_at' => now(),
+                                ]);
+
+                                $recipientsRecojo = User::role(['logistica', 'soporte_biomedico', 'almacen'])->get();
+                                if ($recipientsRecojo->isNotEmpty()) {
+                                    Notification::send($recipientsRecojo, new RecogidaMaterialNotification($movimiento));
+                                }
+                            }
                         })
                         ->closeModalByClickingAway(false)
                         ->modalWidth('lg'),

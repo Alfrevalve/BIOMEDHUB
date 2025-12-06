@@ -27,11 +27,11 @@ class InstitucionsTable
                     ->label('Tipo')
                     ->badge()
                     ->color(fn (string $state) => match ($state) {
-                        'Publica' => 'info',
-                        'Privada' => 'primary',
-                        'Militar' => 'warning',
-                        'ONG' => 'success',
-                        default => 'gray',
+                        'Publica' => '#0ea5e9',   // azul
+                        'Privada' => '#f97316',   // naranja
+                        'Militar' => '#f59e0b',   // ámbar
+                        'ONG' => '#10b981',       // verde
+                        default => '#6b7280',
                     }),
                 TextColumn::make('ciudad')
                     ->label('Ciudad')

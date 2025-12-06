@@ -16,6 +16,7 @@ class Movimiento extends Model
         'equipo_id',
         'institucion_id',
         'cirugia_id',
+        'pedido_id',
         'nombre',
         'fecha_salida',
         'fecha_retorno',
@@ -24,6 +25,8 @@ class Movimiento extends Model
         'servicio',
         'material_enviado',
         'material_usado',
+        'transportista',
+        'transportista_contacto',
         'entregado_por',
         'recibido_por',
         'documento_soporte',
@@ -55,6 +58,7 @@ class Movimiento extends Model
     public function equipo()      { return $this->belongsTo(Equipo::class); }
     public function institucion() { return $this->belongsTo(Institucion::class); }
     public function cirugia()     { return $this->belongsTo(Cirugia::class); }
+    public function pedido()      { return $this->belongsTo(Pedido::class); }
 
     public function getActivitylogOptions(): LogOptions
     {

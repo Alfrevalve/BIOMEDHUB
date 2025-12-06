@@ -27,8 +27,12 @@ class MovimientoForm
                 Select::make('cirugia_id')
                     ->relationship('cirugia', 'nombre')
                     ->searchable(),
+                Select::make('pedido_id')
+                    ->relationship('pedido', 'codigo_pedido')
+                    ->searchable()
+                    ->preload(),
                 TextInput::make('nombre')
-                    ->placeholder('Se autogenera si se deja vacío'),
+                    ->placeholder('Se autogenera si se deja vacio'),
                 DateTimePicker::make('fecha_salida')
                     ->required(),
                 DateTimePicker::make('fecha_retorno'),
@@ -44,6 +48,9 @@ class MovimientoForm
                     ->options(MovimientoServicio::options())
                     ->default(MovimientoServicio::Neuro->value)
                     ->required(),
+                TextInput::make('transportista'),
+                TextInput::make('transportista_contacto')
+                    ->label('Contacto transportista'),
                 TagsInput::make('material_enviado')
                     ->placeholder('Agregar item')
                     ->separator(',')

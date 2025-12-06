@@ -5,12 +5,15 @@ namespace App\Filament\Resources\Pedidos\Tables;
 use App\Enums\PedidoEstado;
 use App\Enums\PedidoPrioridad;
 use App\Models\User;
+use App\Notifications\PedidoListoDespachoNotification;
 use App\Notifications\PedidoTransitionNotification;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -34,6 +37,11 @@ class PedidosTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('entregado_en_institucion_at')
+                    ->label('Entregado en institucion')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()
@@ -60,6 +68,12 @@ class PedidosTable
                 TextColumn::make('responsable')
                     ->label('Responsable')
                     ->searchable(),
+                TextColumn::make('transportista')
+                    ->label('Transportista')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('transportista_contacto')
+                    ->label('Contacto transportista')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('cirugia.nombre')
                     ->label('Cirugia')
                     ->searchable()
@@ -67,6 +81,44 @@ class PedidosTable
                 TextColumn::make('itemKit.nombre')
                     ->label('Kit')
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('material_detalle')
+                    ->label('Materiales')
+                    ->formatStateUsing(function ($state) {
+                        if (! is_array($state) || empty($state)) {
+                            return 'Sin detalle';
+                        }
+                        return collect($state)->map(function ($row) {
+                            $desc = $row['descripcion'] ?? 'Material';
+                            $cant = $row['cantidad'] ?? 1;
+                            return "{$desc} (x{$cant})";
+                        })->implode(', ');
+                    })
+                    ->wrap()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('equipo_detalle')
+                    ->label('Equipos')
+                    ->formatStateUsing(function ($state) {
+                        if (! is_array($state) || empty($state)) {
+                            return 'Sin equipos';
+                        }
+                        return collect($state)->map(function ($row) {
+                            $eq = $row['equipo'] ?? 'Equipo';
+                            $cod = $row['codigo'] ?? null;
+                            return $cod ? "{$eq} ({$cod})" : $eq;
+                        })->implode(', ');
+                    })
+                    ->wrap()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                IconColumn::make('evidencia_consumo')
+                    ->label('Evidencia consumo')
+                    ->state(function ($record) {
+                        return $record->cirugia?->reportes()->whereNotNull('evidencia_path')->exists();
+                    })
+                    ->boolean()
+                    ->trueIcon('heroicon-o-photo')
+                    ->falseIcon('heroicon-o-exclamation-circle')
+                    ->color(fn ($state) => $state ? 'success' : 'warning')
+                    ->tooltip(fn ($state) => $state ? 'Con evidencia' : 'Falta evidencia'),
                 TextColumn::make('fecha')
                     ->label('Creado')
                     ->date()
@@ -96,6 +148,30 @@ class PedidosTable
                             $record->update(['estado' => 'Preparacion']);
                             self::notifyRoles($record, 'Preparacion');
                         }),
+                    Action::make('marcar_listo_despacho')
+                        ->label('Listo para despacho')
+                        ->icon('heroicon-o-bell-alert')
+                        ->color('info')
+                        ->visible(fn ($record) => in_array($record->estado, ['Solicitado', 'Preparacion']))
+                        ->form([
+                            TextInput::make('transportista')
+                                ->label('Transportista')
+                                ->placeholder('Nombre de la empresa o persona')
+                                ->required(),
+                            TextInput::make('transportista_contacto')
+                                ->label('Contacto / telefono')
+                                ->required(),
+                        ])
+                        ->action(function ($record, array $data) {
+                            $record->update([
+                                'estado' => 'Preparacion',
+                                'listo_despacho_at' => now(),
+                                'transportista' => $data['transportista'],
+                                'transportista_contacto' => $data['transportista_contacto'],
+                            ]);
+
+                            self::notifyListoDespacho($record);
+                        }),
                     Action::make('a_despachado')
                         ->label('Marcar despachado')
                         ->icon('heroicon-o-truck')
@@ -113,7 +189,10 @@ class PedidosTable
                         ->requiresConfirmation()
                         ->visible(fn ($record) => $record->estado === 'Despachado')
                         ->action(function ($record) {
-                            $record->update(['estado' => 'Entregado']);
+                            $record->update([
+                                'estado' => 'Entregado',
+                                'entregado_en_institucion_at' => $record->entregado_en_institucion_at ?: now(),
+                            ]);
                             self::notifyRoles($record, 'Entregado');
                         }),
                     Action::make('a_devuelto')
@@ -142,6 +221,14 @@ class PedidosTable
         $recipients = User::role(['logistica', 'soporte_biomedico'])->get();
         if ($recipients->isNotEmpty()) {
             Notification::send($recipients, new PedidoTransitionNotification($pedido, $etapa));
+        }
+    }
+
+    protected static function notifyListoDespacho($pedido): void
+    {
+        $recipients = User::role(['logistica', 'soporte_biomedico'])->get();
+        if ($recipients->isNotEmpty()) {
+            Notification::send($recipients, new PedidoListoDespachoNotification($pedido));
         }
     }
 }

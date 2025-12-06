@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Movimientos;
 use App\Filament\Resources\Movimientos\Pages\CreateMovimiento;
 use App\Filament\Resources\Movimientos\Pages\EditMovimiento;
 use App\Filament\Resources\Movimientos\Pages\ListMovimientos;
+use App\Filament\Resources\Movimientos\Pages\RecojosPendientes;
 use App\Filament\Resources\Movimientos\Schemas\MovimientoForm;
 use App\Filament\Resources\Movimientos\Tables\MovimientosTable;
 use App\Models\Movimiento;
@@ -43,6 +44,7 @@ class MovimientoResource extends Resource
     {
         return [
             'index' => ListMovimientos::route('/'),
+            'recojos' => RecojosPendientes::route('/recojos'),
             'create' => CreateMovimiento::route('/create'),
             'edit' => EditMovimiento::route('/{record}/edit'),
         ];
@@ -50,12 +52,12 @@ class MovimientoResource extends Resource
 
     protected static function canManage(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'logistica']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'almacen', 'facturacion', 'soporte_biomedico']) ?? false;
     }
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'auditoria', 'soporte_biomedico']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'auditoria', 'soporte_biomedico', 'almacen', 'facturacion', 'comercial']) ?? false;
     }
 
     public static function canCreate(): bool

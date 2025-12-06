@@ -53,7 +53,7 @@ class InstitucionResource extends Resource
 
     protected static function canManage(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'logistica']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'comercial']) ?? false;
     }
 
     public static function canViewAny(): bool

@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class ItemKitResource extends Resource
 {
@@ -33,20 +34,36 @@ class ItemKitResource extends Resource
                 ->label('Nombre')
                 ->required(),
             TextInput::make('codigo')
-                ->label('Código')
+                ->label('Codigo')
                 ->unique(ignoreRecord: true)
                 ->required(),
             Textarea::make('descripcion')
-                ->label('Descripción')
+                ->label('Descripcion')
                 ->columnSpanFull(),
             Repeater::make('items')
-                ->label('Composición')
+                ->label('Composicion')
                 ->relationship()
                 ->schema([
                     Select::make('item_id')
-                        ->label('Ítem')
-                        ->options(Item::query()->pluck('nombre', 'id'))
+                        ->label('SKU / Item')
                         ->searchable()
+                        ->getSearchResultsUsing(function (string $search): array {
+                            return Item::query()
+                                ->where('sku', 'like', "%{$search}%")
+                                ->orWhere('nombre', 'like', "%{$search}%")
+                                ->orderBy('sku')
+                                ->limit(50)
+                                ->get()
+                                ->mapWithKeys(fn (Item $item) => [
+                                    $item->id => "{$item->sku} — " . Str::limit($item->nombre, 80),
+                                ])
+                                ->toArray();
+                        })
+                        ->getOptionLabelUsing(function ($value): ?string {
+                            $item = Item::find($value);
+
+                            return $item ? "{$item->sku} — {$item->nombre}" : null;
+                        })
                         ->required(),
                     TextInput::make('cantidad')
                         ->label('Cantidad')
@@ -64,9 +81,9 @@ class ItemKitResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('codigo')->label('Código')->searchable(),
+                TextColumn::make('codigo')->label('Codigo')->searchable(),
                 TextColumn::make('nombre')->label('Nombre')->searchable(),
-                TextColumn::make('items_count')->counts('items')->label('Ítems'),
+                TextColumn::make('items_count')->counts('items')->label('Items'),
                 TextColumn::make('created_at')->dateTime()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->recordActions([
@@ -87,5 +104,40 @@ class ItemKitResource extends Resource
             'create' => CreateItemKit::route('/create'),
             'edit' => EditItemKit::route('/{record}/edit'),
         ];
+    }
+
+    protected static function canManage(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'almacen']) ?? false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'almacen', 'auditoria']) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canForceDelete($record): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canRestore($record): bool
+    {
+        return self::canManage();
     }
 }

@@ -17,6 +17,8 @@ class RolesSeeder extends Seeder
             'comercial',
             'soporte_biomedico',
             'auditoria',
+            'almacen',
+            'facturacion',
         ];
 
         foreach ($roles as $role) {

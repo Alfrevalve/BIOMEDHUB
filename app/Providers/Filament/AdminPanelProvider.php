@@ -48,6 +48,8 @@ class AdminPanelProvider extends PanelProvider
                     '<link rel="stylesheet" href="'.asset('css/filament/admin/theme.css').'">'
                 )
             )
+            ->sidebarCollapsibleOnDesktop()
+            ->sidebarFullyCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
