@@ -5,14 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Pedido extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'cirugia_id',
+        'item_kit_id',
         'codigo_pedido',
         'fecha',
         'fecha_entrega',
@@ -32,6 +36,22 @@ class Pedido extends Model
         static::creating(function (Pedido $pedido) {
             if (empty($pedido->codigo_pedido)) {
                 $pedido->codigo_pedido = self::generateCode();
+            }
+        });
+
+        static::created(function (Pedido $pedido) {
+            $pedido->reservarKit();
+        });
+
+        static::updated(function (Pedido $pedido) {
+            if ($pedido->wasChanged('estado')) {
+                if ($pedido->estado === 'Despachado') {
+                    $pedido->consumirReservas();
+                }
+
+                if (in_array($pedido->estado, ['Entregado', 'Devuelto'], true)) {
+                    $pedido->devolverReservas();
+                }
             }
         });
     }
@@ -58,6 +78,63 @@ class Pedido extends Model
         return $this->belongsTo(Cirugia::class);
     }
 
+    public function itemKit()
+    {
+        return $this->belongsTo(ItemKit::class, 'item_kit_id');
+    }
+
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class);
+    }
+
+    /** Inventario */
+    public function reservarKit(): void
+    {
+        if (! $this->itemKit) {
+            return;
+        }
+
+        foreach ($this->itemKit->items as $kitItem) {
+            /** @var \App\Models\Item $item */
+            $item = $kitItem->item;
+            if (! $item || ! $item->reservar($kitItem->cantidad)) {
+                continue;
+            }
+
+            Reserva::create([
+                'item_id' => $item->id,
+                'pedido_id' => $this->id,
+                'cirugia_id' => $this->cirugia_id,
+                'cantidad' => $kitItem->cantidad,
+                'estado' => 'Reservado',
+            ]);
+        }
+    }
+
+    public function consumirReservas(): void
+    {
+        foreach ($this->reservas as $reserva) {
+            $item = $reserva->item;
+            if ($item) {
+                $item->liberar($reserva->cantidad);
+                $item->consumir($reserva->cantidad);
+            }
+            $reserva->update(['estado' => 'Consumido']);
+        }
+    }
+
+    public function devolverReservas(): void
+    {
+        foreach ($this->reservas as $reserva) {
+            $item = $reserva->item;
+            if ($item) {
+                $item->liberar($reserva->cantidad);
+            }
+            $reserva->update(['estado' => 'Devuelto']);
+        }
+    }
+
     /** Scopes de tablero logístico */
     public function scopeNoCerrados($q)
     {
@@ -67,5 +144,13 @@ class Pedido extends Model
     public function scopeParaEntrega($q, $date)
     {
         return $q->whereDate('fecha_entrega', $date);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('pedido');
     }
 }

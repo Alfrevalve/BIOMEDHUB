@@ -25,8 +25,15 @@ class RolesSeeder extends Seeder
             );
         }
 
-        if ($admin = User::where('email', 'test@example.com')->first()) {
-            $admin->syncRoles(['admin']);
-        }
+        // Asegurar usuario admin principal
+        $adminEmail = env('ADMIN_EMAIL', 'jesus.valera@biomedsac.com.pe');
+        $adminPassword = env('ADMIN_PASSWORD', 'CambiaEstaClave123!');
+
+        $admin = User::updateOrCreate(
+            ['email' => $adminEmail],
+            ['name' => 'Administrador', 'password' => $adminPassword]
+        );
+
+        $admin->syncRoles(['admin']);
     }
 }

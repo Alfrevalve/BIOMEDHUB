@@ -5,10 +5,13 @@ namespace App\Models;
 use App\Actions\CrearPedidoDesdeCirugia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Cirugia extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'institucion_id',
@@ -40,6 +43,11 @@ class Cirugia extends Model
         return $this->belongsTo(\App\Models\Institucion::class);
     }
 
+    public function reportes()
+    {
+        return $this->hasMany(\App\Models\CirugiaReporte::class);
+    }
+
     /** Scopes operativos */
     public function scopeNoCanceladas($q)
     {
@@ -54,5 +62,13 @@ class Cirugia extends Model
     public function scopeActivas48h($q)
     {
         return $q->whereBetween('fecha_programada', [now()->subHours(24), now()->addHours(24)]);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('cirugia');
     }
 }

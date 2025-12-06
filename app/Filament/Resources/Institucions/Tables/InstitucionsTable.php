@@ -15,22 +15,42 @@ class InstitucionsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('nombre')
+            ->striped()
             ->columns([
                 TextColumn::make('nombre')
-                    ->searchable(),
+                    ->label('Institucion')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold'),
                 TextColumn::make('tipo')
-                    ->badge(),
+                    ->label('Tipo')
+                    ->badge()
+                    ->color(fn (string $state) => match ($state) {
+                        'Publica' => 'info',
+                        'Privada' => 'primary',
+                        'Militar' => 'warning',
+                        'ONG' => 'success',
+                        default => 'gray',
+                    }),
                 TextColumn::make('ciudad')
+                    ->label('Ciudad')
                     ->searchable(),
                 TextColumn::make('direccion')
-                    ->searchable(),
+                    ->label('Direccion')
+                    ->searchable()
+                    ->limit(60),
                 TextColumn::make('contacto')
-                    ->searchable(),
+                    ->label('Contacto')
+                    ->searchable()
+                    ->limit(40),
                 TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -39,7 +59,8 @@ class InstitucionsTable
                 SelectFilter::make('tipo')->options(InstitucionTipo::options()),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->tooltip('Editar institucion'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

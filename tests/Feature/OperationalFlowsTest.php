@@ -8,6 +8,7 @@ use App\Models\Cirugia;
 use App\Models\Equipo;
 use App\Models\Institucion;
 use App\Models\Movimiento;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -15,6 +16,12 @@ use Tests\TestCase;
 class OperationalFlowsTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(RolesSeeder::class);
+    }
 
     public function test_creates_pedido_automaticamente_al_crear_cirugia(): void
     {

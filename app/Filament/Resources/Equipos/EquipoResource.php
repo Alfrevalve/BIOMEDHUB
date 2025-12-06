@@ -47,4 +47,39 @@ class EquipoResource extends Resource
             'edit' => EditEquipo::route('/{record}/edit'),
         ];
     }
+
+    protected static function canManage(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'logistica']) ?? false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'auditoria', 'soporte_biomedico']) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canForceDelete($record): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canRestore($record): bool
+    {
+        return self::canManage();
+    }
 }

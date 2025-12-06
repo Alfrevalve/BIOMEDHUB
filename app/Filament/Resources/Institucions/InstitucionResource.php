@@ -21,6 +21,9 @@ class InstitucionResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice;
 
     protected static ?string $recordTitleAttribute = 'nombre';
+    protected static ?string $modelLabel = 'Institucion';
+    protected static ?string $pluralModelLabel = 'Instituciones';
+    protected static ?string $navigationLabel = 'Instituciones';
 
     public static function form(Schema $schema): Schema
     {
@@ -46,5 +49,40 @@ class InstitucionResource extends Resource
             'create' => CreateInstitucion::route('/create'),
             'edit' => EditInstitucion::route('/{record}/edit'),
         ];
+    }
+
+    protected static function canManage(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'logistica']) ?? false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'logistica', 'auditoria', 'comercial']) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canForceDelete($record): bool
+    {
+        return self::canManage();
+    }
+
+    public static function canRestore($record): bool
+    {
+        return self::canManage();
     }
 }

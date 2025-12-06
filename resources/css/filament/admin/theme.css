@@ -23,6 +23,7 @@
         border-radius: 14px;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
         color: #f8fbff;
+        transition: transform 140ms ease, box-shadow 140ms ease;
     }
 
     .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-label,
@@ -33,6 +34,11 @@
 
     .fi-wi-stats-overview-stat .fi-wi-stats-overview-stat-label-ctn svg {
         color: #f8fbff;
+    }
+
+    .fi-wi-stats-overview-stat:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32);
     }
 
     .tile-primary { background: linear-gradient(135deg, var(--color-primary), color-mix(in oklch, var(--color-primary) 60%, #4fd1c5 40%)); }
@@ -58,8 +64,8 @@
     .fi-simple-page-content {
         width: min(520px, 100%);
         margin: 0 auto;
-        background: var(--glass);
-        border: 1px solid var(--glass-border);
+        background: linear-gradient(165deg, rgba(18, 40, 50, 0.92), rgba(23, 64, 76, 0.82));
+        border: 1px solid rgba(53, 147, 96, 0.35);
         border-radius: 20px;
         box-shadow:
             0 20px 50px rgba(0, 0, 0, 0.38),
@@ -100,7 +106,7 @@
         gap: 0.45rem;
         align-items: center;
         margin-bottom: 1.25rem;
-        color: #e9f4f8;
+        color: #ecf7fb;
         text-align: center;
     }
 
@@ -118,9 +124,9 @@
     .fi-simple-page .fi-input,
     .fi-simple-page input,
     .fi-simple-page select {
-        background: rgba(23, 64, 76, 0.72);
-        border: 1px solid rgba(34, 129, 167, 0.45);
-        color: #e9f4f8;
+        background: rgba(23, 64, 76, 0.78);
+        border: 1px solid rgba(34, 129, 167, 0.55);
+        color: #f3f8fb;
         border-radius: 12px;
         transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
     }
@@ -131,6 +137,23 @@
         border-color: var(--glow-2);
         box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 35%, transparent);
         transform: translateY(-1px);
+    }
+
+    .fi-simple-page input::placeholder,
+    .fi-simple-page .fi-input::placeholder {
+        color: color-mix(in oklch, #f3f8fb 60%, #b3ced8 40%);
+    }
+
+    .fi-simple-page input[aria-invalid="true"],
+    .fi-simple-page select[aria-invalid="true"] {
+        border-color: #ff9b9b;
+        box-shadow: 0 0 0 3px rgba(255, 155, 155, 0.18);
+    }
+
+    .fi-simple-page .fi-forms-input-validation-error {
+        color: #ffc0c0;
+        font-weight: 700;
+        font-size: 0.95rem;
     }
 
     .fi-simple-page button[type="submit"],

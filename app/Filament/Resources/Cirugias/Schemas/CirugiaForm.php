@@ -37,7 +37,9 @@ class CirugiaForm
                 Toggle::make('crear_pedido_auto')
                     ->default(true)
                     ->required(),
-                TextInput::make('paciente_codigo'),
+                TextInput::make('paciente_codigo')
+                    ->label('Paciente (nombre y apellido)')
+                    ->placeholder('Ej: Juan Perez'),
                 TextInput::make('monto_soles')
                     ->numeric(),
             ]);

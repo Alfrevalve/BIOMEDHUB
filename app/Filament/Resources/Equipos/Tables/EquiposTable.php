@@ -16,30 +16,53 @@ class EquiposTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('nombre')
+            ->striped()
             ->columns([
                 TextColumn::make('nombre')
-                    ->searchable(),
+                    ->label('Equipo')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold'),
                 TextColumn::make('codigo_interno')
-                    ->searchable(),
-                TextColumn::make('tipo')
-                    ->badge(),
+                    ->label('Codigo interno')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('estado_actual')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn (string $state) => match ($state) {
+                        'Disponible' => 'success',
+                        'En uso' => 'primary',
+                        'En mantenimiento' => 'warning',
+                        'Baja' => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('tipo')
+                    ->label('Tipo')
                     ->badge(),
                 TextColumn::make('institucion.nombre')
-                    ->label('Institución')
+                    ->label('Institucion')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('marca_modelo')
-                    ->searchable(),
+                    ->label('Marca/Modelo')
+                    ->searchable()
+                    ->limit(40),
                 TextColumn::make('serie')
+                    ->label('Serie')
                     ->searchable(),
                 TextColumn::make('responsable_actual')
-                    ->searchable(),
+                    ->label('Responsable')
+                    ->searchable()
+                    ->limit(40),
                 TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -49,7 +72,8 @@ class EquiposTable
                 SelectFilter::make('estado_actual')->options(EquipoEstado::options()),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->tooltip('Editar equipo'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

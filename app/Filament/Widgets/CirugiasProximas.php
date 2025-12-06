@@ -10,7 +10,14 @@ use Illuminate\Database\Eloquent\Builder;
 
 class CirugiasProximas extends TableWidget
 {
+    protected static ?string $heading = 'Próximas cirugías';
+
     protected int|string|array $columnSpan = 'full';
+
+    public static function canView(): bool
+    {
+        return false; // ocultar en dashboard
+    }
 
     protected function getTableQuery(): Builder
     {

@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class MovimientosActivos extends TableWidget
 {
+    protected static ?string $heading = 'Movimientos activos';
+
     protected function getTableQuery(): Builder
     {
         return Movimiento::query()

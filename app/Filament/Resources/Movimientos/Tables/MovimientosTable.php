@@ -5,58 +5,85 @@ namespace App\Filament\Resources\Movimientos\Tables;
 use App\Enums\MovimientoEstado;
 use App\Enums\MovimientoMotivo;
 use App\Enums\MovimientoServicio;
+use App\Models\User;
+use App\Notifications\RecogidaMaterialNotification;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\TagsInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Notification;
 
 class MovimientosTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('fecha_salida', 'asc')
+            ->striped()
             ->columns([
+                TextColumn::make('nombre')
+                    ->label('Movimiento')
+                    ->searchable()
+                    ->weight('semibold')
+                    ->limit(50),
+                TextColumn::make('estado_mov')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn (string $state) => match ($state) {
+                        'Programado' => 'info',
+                        'En uso' => 'primary',
+                        'Devuelto' => 'success',
+                        'Cancelado' => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('fecha_salida')
+                    ->label('Salida')
+                    ->dateTime()
+                    ->sortable(),
+                TextColumn::make('fecha_retorno')
+                    ->label('Retorno')
+                    ->dateTime()
+                    ->sortable(),
+                TextColumn::make('motivo')
+                    ->label('Motivo')
+                    ->badge(),
+                TextColumn::make('servicio')
+                    ->label('Servicio')
+                    ->badge(),
                 TextColumn::make('equipo.nombre')
                     ->label('Equipo')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('institucion.nombre')
-                    ->label('Institución')
+                    ->label('Institucion')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('cirugia.nombre')
-                    ->label('Cirugía')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('nombre')
-                    ->label('Movimiento')
-                    ->searchable()
-                    ->limit(40),
-                TextColumn::make('fecha_salida')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('fecha_retorno')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('estado_mov')
-                    ->badge(),
-                TextColumn::make('motivo')
-                    ->badge(),
-                TextColumn::make('servicio')
-                    ->badge(),
                 TextColumn::make('entregado_por')
+                    ->label('Entregado por')
                     ->searchable(),
                 TextColumn::make('recibido_por')
+                    ->label('Recibido por')
                     ->searchable(),
+                TextColumn::make('cirugia.nombre')
+                    ->label('Cirugia')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('documento_soporte')
-                    ->searchable(),
+                    ->label('Documento')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -67,7 +94,55 @@ class MovimientosTable
                 SelectFilter::make('servicio')->options(MovimientoServicio::options()),
             ])
             ->recordActions([
-                EditAction::make(),
+                ActionGroup::make([
+                    EditAction::make()
+                        ->tooltip('Editar movimiento'),
+                    Action::make('marcar_en_uso')
+                        ->label('Marcar en uso')
+                        ->icon('heroicon-o-play')
+                        ->color('primary')
+                        ->visible(fn ($record) => $record->estado_mov === 'Programado')
+                        ->requiresConfirmation()
+                        ->action(fn ($record) => $record->update(['estado_mov' => 'En uso'])),
+                    Action::make('solicitar_recogida')
+                        ->label('Solicitar recogida')
+                        ->icon('heroicon-o-truck')
+                        ->color('primary')
+                        ->form([
+                            TagsInput::make('material_usado')
+                                ->label('Material usado')
+                                ->placeholder('Anadir item')
+                                ->separator(',')
+                                ->columnSpanFull(),
+                        ])
+                        ->action(function ($record, array $data) {
+                            $record->update([
+                                'material_usado' => $data['material_usado'] ?? [],
+                                'estado_mov' => 'Devuelto',
+                                'fecha_retorno' => now(),
+                                'recogida_solicitada_at' => now(),
+                            ]);
+
+                            $recipients = User::role(['logistica', 'soporte_biomedico'])->get();
+                            if ($recipients->isNotEmpty()) {
+                                Notification::send($recipients, new RecogidaMaterialNotification($record));
+                            }
+                        }),
+                    Action::make('confirmar_devolucion')
+                        ->label('Confirmar devolucion')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->visible(fn ($record) => in_array($record->estado_mov, ['En uso', 'Programado']))
+                        ->requiresConfirmation()
+                        ->action(function ($record) {
+                            $record->update([
+                                'estado_mov' => 'Devuelto',
+                                'fecha_retorno' => now(),
+                            ]);
+                        }),
+                ])
+                    ->label('Acciones')
+                    ->icon('heroicon-m-ellipsis-horizontal'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

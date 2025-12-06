@@ -13,8 +13,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
@@ -24,7 +24,10 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Administración';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administracion';
+    protected static ?string $modelLabel = 'Usuario';
+    protected static ?string $pluralModelLabel = 'Usuarios';
+    protected static ?string $navigationLabel = 'Usuarios';
 
     public static function form(Schema $schema): Schema
     {
@@ -39,7 +42,7 @@ class UserResource extends Resource
                 ->unique(ignoreRecord: true)
                 ->required(),
             TextInput::make('password')
-                ->label('Contraseña')
+                ->label('Contrasena')
                 ->password()
                 ->revealable()
                 ->dehydrated(fn ($state) => filled($state))
@@ -56,25 +59,51 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name')
+            ->striped()
             ->columns([
                 TextColumn::make('name')
                     ->label('Nombre')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold'),
                 TextColumn::make('email')
                     ->label('Email')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('roles.name')
                     ->label('Roles')
                     ->badge()
-                    ->separator(',')
-                    ->sortable(),
+                    ->color(function ($state) {
+                        $primary = is_array($state) ? ($state[0] ?? '') : (string) $state;
+                        $primary = strtolower(trim(explode(',', $primary)[0] ?? ''));
+
+                        return match ($primary) {
+                            'admin' => 'danger',
+                            'logistica' => 'primary',
+                            'soporte_biomedico' => 'warning',
+                            'auditoria' => 'info',
+                            'comercial' => 'success',
+                            default => 'gray',
+                        };
+                    })
+                    ->separator(','),
                 TextColumn::make('created_at')
                     ->label('Creado')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->label('Actualizado')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 TrashedFilter::make(),
+                SelectFilter::make('roles')
+                    ->label('Rol')
+                    ->relationship('roles', 'name'),
             ])
             ->recordActions([
                 Actions\EditAction::make(),

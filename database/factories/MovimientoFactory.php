@@ -19,7 +19,7 @@ class MovimientoFactory extends Factory
             'equipo_id' => Equipo::factory(),
             'institucion_id' => Institucion::factory(),
             'cirugia_id' => null,
-            'nombre' => null,
+            'nombre' => 'Movimiento ' . $this->faker->unique()->bothify('MV-###'),
             'fecha_salida' => $fechaSalida,
             'fecha_retorno' => null,
             'estado_mov' => 'Programado',

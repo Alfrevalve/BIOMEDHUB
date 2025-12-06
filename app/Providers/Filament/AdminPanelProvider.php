@@ -6,6 +6,7 @@ use App\Filament\Widgets\CirugiasProximas;
 use App\Filament\Widgets\DashboardStats;
 use App\Filament\Widgets\MovimientosActivos;
 use App\Filament\Widgets\PedidosUrgentes;
+use App\Filament\Widgets\StockBajo;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -55,11 +56,11 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 DashboardStats::class,
-                CirugiasProximas::class,
                 PedidosUrgentes::class,
                 MovimientosActivos::class,
+                CirugiasProximas::class,
+                StockBajo::class,
                 AccountWidget::class,
-                FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

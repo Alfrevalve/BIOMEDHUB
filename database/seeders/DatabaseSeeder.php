@@ -20,12 +20,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        $user = User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Usuario de prueba solo en entornos locales
+        if (app()->environment('local', 'development')) {
+            User::updateOrCreate(
+                ['email' => 'test@example.com'],
+                ['name' => 'Test User', 'password' => env('ADMIN_PASSWORD', 'password')]
+            );
+        }
 
         // Datos operativos mínimos para desarrollo
         $instituciones = Institucion::factory(3)->create();
@@ -48,5 +49,6 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(RolesSeeder::class);
+        $this->call(SampleDataSeeder::class);
     }
 }
