@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Pedidos\Tables;
 use App\Enums\PedidoEstado;
 use App\Enums\PedidoPrioridad;
 use App\Models\User;
+use App\Models\Pedido;
 use App\Notifications\PedidoListoDespachoNotification;
 use App\Notifications\PedidoTransitionNotification;
 use Filament\Actions\Action;
@@ -178,7 +179,17 @@ class PedidosTable
                         ->color('primary')
                         ->requiresConfirmation()
                         ->visible(fn ($record) => in_array($record->estado, ['Solicitado', 'Preparacion']))
-                        ->action(function ($record) {
+                        ->action(function (Pedido $record) {
+                            try {
+                                $record->validarDisponibilidadKit();
+                            } catch (\Throwable $e) {
+                                return Notification::make()
+                                    ->title('Stock insuficiente para despachar kit')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+
                             $record->update(['estado' => 'Despachado']);
                             self::notifyRoles($record, 'Despachado');
                         }),

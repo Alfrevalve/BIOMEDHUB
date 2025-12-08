@@ -5,7 +5,7 @@
 <title>Digest Operativo</title>
 </head>
 <body style="font-family: Arial, sans-serif; color:#111;">
-  <h2>BIOMED HUB 2.0 · Digest Diario</h2>
+  <h2>BIOMED HUB 2.0 — Digest diario</h2>
   <p><strong>Fecha:</strong> {{ $fecha }}</p>
 
   <h3>Cirugías de mañana ({{ $totalCir }})</h3>
@@ -31,9 +31,9 @@
     <ul>
       @foreach($pedidos as $p)
         <li>
-          <strong>{{ $p->codigo_pedido }}</strong> · {{ $p->estado }}
-          · Entrega: {{ optional($p->fecha_entrega)->timezone('America/Lima')->format('d/m/Y H:i') ?? 'Sin fecha' }}
-          @if(!empty($p->entrega_a)) · {{ $p->entrega_a }} @endif
+          <strong>{{ $p->codigo_pedido }}</strong> — {{ $p->estado }}
+          — Entrega: {{ optional($p->fecha_entrega)->timezone('America/Lima')->format('d/m/Y H:i') ?? 'Sin fecha' }}
+          @if(!empty($p->entrega_a)) — {{ $p->entrega_a }} @endif
         </li>
       @endforeach
     </ul>
@@ -46,8 +46,8 @@
     <ul>
       @foreach($atrasados as $a)
         <li>
-          <strong>{{ $a->codigo_pedido }}</strong> · {{ $a->estado }}
-          · Debió entregarse: {{ optional($a->fecha_entrega)->timezone('America/Lima')->format('d/m/Y H:i') ?? 'Sin fecha' }}
+          <strong>{{ $a->codigo_pedido }}</strong> — {{ $a->estado }}
+          — Debió entregarse: {{ optional($a->fecha_entrega)->timezone('America/Lima')->format('d/m/Y H:i') ?? 'Sin fecha' }}
         </li>
       @endforeach
     </ul>

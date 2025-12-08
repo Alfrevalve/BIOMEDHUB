@@ -7,6 +7,7 @@ use App\Enums\PedidoPrioridad;
 use App\Models\ItemKit;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -24,7 +25,38 @@ class PedidoForm
                 Select::make('item_kit_id')
                     ->label('Kit de materiales')
                     ->options(ItemKit::query()->pluck('nombre', 'id'))
-                    ->searchable(),
+                    ->searchable()
+                    ->live()
+                    ->afterStateUpdated(fn (callable $set) => $set('material_detalle', [])),
+                Placeholder::make('kit_disponibilidad')
+                    ->label('Disponibilidad del kit')
+                    ->content(function (callable $get) {
+                        $kitId = $get('item_kit_id');
+                        if (! $kitId) {
+                            return 'Selecciona un kit para ver sus componentes y stock.';
+                        }
+
+                        $kit = ItemKit::with(['items.item'])->find($kitId);
+                        if (! $kit) {
+                            return 'Kit no encontrado.';
+                        }
+
+                        $rows = [];
+                        foreach ($kit->items as $kitItem) {
+                            $item = $kitItem->item;
+                            if (! $item) {
+                                continue;
+                            }
+                            $disp = $item->disponible();
+                            $rows[] = "{$item->sku} • requiere {$kitItem->cantidad} (disp: {$disp})";
+                        }
+
+                        return empty($rows)
+                            ? 'El kit no tiene items definidos.'
+                            : implode("\n", $rows);
+                    })
+                    ->columnSpanFull()
+                    ->hint('Se valida stock y se reserva automáticamente al crear.'),
                 Repeater::make('material_detalle')
                     ->label('Materiales')
                     ->schema([

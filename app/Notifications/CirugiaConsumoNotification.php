@@ -28,7 +28,7 @@ class CirugiaConsumoNotification extends Notification implements ShouldQueue
         $fecha = optional($this->cirugia->fecha_programada)->timezone('America/Lima')->format('d/m/Y H:i');
 
         return (new MailMessage)
-            ->subject('Consumo registrado - ' . ($this->cirugia->nombre ?? 'Cirugia'))
+            ->subject('Consumo registrado - ' . ($this->cirugia->nombre ?? 'Cirugía'))
             ->line('Se registró el consumo y evidencia de una cirugía.')
             ->line('Cirugía: ' . ($this->cirugia->nombre ?? ''))
             ->line('Fecha programada: ' . $fecha)

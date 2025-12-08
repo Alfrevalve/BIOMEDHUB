@@ -63,7 +63,7 @@
         </section>
 
         <footer class="footer">
-            © {{ date('Y') }} BiomedHub — Gestión inteligente para quirófanos y logística.
+            &copy; {{ date('Y') }} BiomedHub - Gestión inteligente para quirófanos y logística.
         </footer>
     </div>
 </body>

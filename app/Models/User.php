@@ -47,4 +47,19 @@ class User extends Authenticatable
             $this->attributes['password'] = bcrypt($value);
         }
     }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'recipient_id');
+    }
+
+    public function unreadMessagesCount(): int
+    {
+        return $this->receivedMessages()->whereNull('read_at')->count();
+    }
 }

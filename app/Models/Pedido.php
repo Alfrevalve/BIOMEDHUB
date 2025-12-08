@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -47,13 +49,35 @@ class Pedido extends Model
             if (empty($pedido->codigo_pedido)) {
                 $pedido->codigo_pedido = self::generateCode();
             }
+
+            $pedido->validarDisponibilidadKit();
         });
 
         static::created(function (Pedido $pedido) {
-            $pedido->reservarKit();
+            try {
+                $pedido->reservarKit();
+            } catch (ValidationException $e) {
+                $pedido->updateQuietly(['estado' => 'Observado']);
+                throw $e;
+            } catch (\Throwable $e) {
+                // Estado observado para seguimiento y reintentos manuales.
+                $pedido->updateQuietly(['estado' => 'Observado']);
+                report($e);
+                throw $e;
+            }
         });
 
         static::updated(function (Pedido $pedido) {
+            if ($pedido->wasChanged('item_kit_id')) {
+                try {
+                    $pedido->sincronizarReservas();
+                } catch (\Throwable $e) {
+                    $pedido->updateQuietly(['estado' => 'Observado']);
+                    report($e);
+                    throw $e;
+                }
+            }
+
             if ($pedido->wasChanged('estado')) {
                 if ($pedido->estado === 'Despachado') {
                     $pedido->consumirReservas();
@@ -99,27 +123,103 @@ class Pedido extends Model
     }
 
     /** Inventario */
+    public function validarDisponibilidadKit(): void
+    {
+        if (! $this->itemKit) {
+            return;
+        }
+
+        $kitItems = $this->itemKit->items()->with('item')->get();
+        $faltantes = [];
+
+        foreach ($kitItems as $kitItem) {
+            $item = $kitItem->item;
+            if (! $item) {
+                continue;
+            }
+
+            $disponible = $item->disponible();
+            if ($disponible < $kitItem->cantidad) {
+                $faltantes[] = "{$item->sku} requiere {$kitItem->cantidad} (disp: {$disponible})";
+            }
+        }
+
+        if (! empty($faltantes)) {
+            throw ValidationException::withMessages([
+                'item_kit_id' => 'Stock insuficiente para el kit: ' . implode(', ', $faltantes),
+            ]);
+        }
+    }
+
     public function reservarKit(): void
     {
         if (! $this->itemKit) {
             return;
         }
 
-        foreach ($this->itemKit->items as $kitItem) {
-            /** @var \App\Models\Item $item */
-            $item = $kitItem->item;
-            if (! $item || ! $item->reservar($kitItem->cantidad)) {
-                continue;
+        DB::transaction(function () {
+            $kitItems = $this->itemKit->items()->with('item')->lockForUpdate()->get();
+
+            $faltantes = [];
+            foreach ($kitItems as $kitItem) {
+                $item = $kitItem->item;
+                if (! $item) {
+                    continue;
+                }
+
+                if ($item->disponible() < $kitItem->cantidad) {
+                    $faltantes[] = "{$item->sku} requiere {$kitItem->cantidad} (disp: {$item->disponible()})";
+                }
             }
 
-            Reserva::create([
-                'item_id' => $item->id,
-                'pedido_id' => $this->id,
-                'cirugia_id' => $this->cirugia_id,
-                'cantidad' => $kitItem->cantidad,
-                'estado' => 'Reservado',
-            ]);
+            if (! empty($faltantes)) {
+                throw ValidationException::withMessages([
+                    'item_kit_id' => 'Stock insuficiente para el kit: ' . implode(', ', $faltantes),
+                ]);
+            }
+
+            foreach ($kitItems as $kitItem) {
+                /** @var \App\Models\Item|null $item */
+                $item = $kitItem->item;
+                if (! $item) {
+                    continue;
+                }
+
+                if (! $item->reservar($kitItem->cantidad)) {
+                    throw ValidationException::withMessages([
+                        'item_kit_id' => "No se pudo reservar {$kitItem->cantidad} de {$item->sku}",
+                    ]);
+                }
+
+                Reserva::create([
+                    'item_id' => $item->id,
+                    'pedido_id' => $this->id,
+                    'cirugia_id' => $this->cirugia_id,
+                    'cantidad' => $kitItem->cantidad,
+                    'estado' => 'Reservado',
+                ]);
+            }
+        });
+    }
+
+    public function liberarReservas(): void
+    {
+        foreach ($this->reservas as $reserva) {
+            $item = $reserva->item;
+            if ($item) {
+                $item->liberar($reserva->cantidad);
+            }
+            $reserva->delete();
         }
+    }
+
+    public function sincronizarReservas(): void
+    {
+        DB::transaction(function () {
+            $this->liberarReservas();
+            $this->validarDisponibilidadKit();
+            $this->reservarKit();
+        });
     }
 
     public function consumirReservas(): void

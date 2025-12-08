@@ -23,6 +23,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Support\HtmlString;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -46,6 +47,33 @@ class AdminPanelProvider extends PanelProvider
                 'panels::head.end',
                 fn () => new \Illuminate\Support\HtmlString(
                     '<link rel="stylesheet" href="'.asset('css/filament/admin/theme.css').'">'
+                )
+            )
+            ->renderHook(
+                'panels::topbar.end',
+                fn () => new HtmlString(
+                    <<<HTML
+                    <div id="bh-clock" style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(15,107,182,0.08);color:#0f6bb6;font-weight:600;font-size:0.85rem;">
+                        <span id="bh-date"></span>
+                        <span aria-hidden="true">·</span>
+                        <span id="bh-time"></span>
+                    </div>
+                    <script>
+                        (() => {
+                            const fmtDate = new Intl.DateTimeFormat('es-PE', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+                            const fmtTime = new Intl.DateTimeFormat('es-PE', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+                            const dEl = document.getElementById('bh-date');
+                            const tEl = document.getElementById('bh-time');
+                            const tick = () => {
+                                const now = new Date();
+                                if (dEl) dEl.textContent = fmtDate.format(now);
+                                if (tEl) tEl.textContent = fmtTime.format(now);
+                            };
+                            tick();
+                            setInterval(tick, 1000);
+                        })();
+                    </script>
+                    HTML
                 )
             )
             ->sidebarCollapsibleOnDesktop()

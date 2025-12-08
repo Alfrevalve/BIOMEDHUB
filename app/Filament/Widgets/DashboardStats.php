@@ -64,9 +64,10 @@ class DashboardStats extends BaseWidget
             ->count();
 
         $stockExpr = 'CAST(COALESCE(stock_total,0) AS SIGNED) - CAST(COALESCE(stock_reservado,0) AS SIGNED)';
+        $critico = (int) config('biomedhub.stock_critico_threshold', 5);
 
         $stockCritico = Item::query()
-            ->whereRaw("{$stockExpr} <= 5")
+            ->whereRaw("{$stockExpr} <= ?", [$critico])
             ->count();
 
         $listosDespacho = Pedido::query()
@@ -153,7 +154,7 @@ class DashboardStats extends BaseWidget
                 ->url(EquipoResource::getUrl())
                 ->extraAttributes(['style' => 'background:linear-gradient(135deg,#14b8a6,#0ea5e9);color:#fff']),
             Stat::make('Stock critico', $stockCritico)
-                ->description('Items con <= 5 unid.')
+                ->description("Items con <= {$critico} unid.")
                 ->icon('heroicon-o-exclamation-triangle')
                 ->extraAttributes(['style' => $stockCritico > 0
                     ? 'background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff'

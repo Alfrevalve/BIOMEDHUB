@@ -28,7 +28,7 @@ class CirugiaConsumoFacturacionNotification extends Notification implements Shou
         $fecha = optional($this->cirugia->fecha_programada)->timezone('America/Lima')->format('d/m/Y H:i');
 
         return (new MailMessage)
-            ->subject('Consumo listo para facturar - ' . ($this->cirugia->nombre ?? 'Cirugia'))
+            ->subject('Consumo listo para facturar - ' . ($this->cirugia->nombre ?? 'Cirugía'))
             ->line('Se registró consumo y está pendiente de facturación.')
             ->line('Cirugía: ' . ($this->cirugia->nombre ?? ''))
             ->line('Fecha programada: ' . $fecha)

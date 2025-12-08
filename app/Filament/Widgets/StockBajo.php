@@ -15,10 +15,11 @@ class StockBajo extends TableWidget
     protected function getTableQuery(): Builder
     {
         $availableExpr = 'CAST(COALESCE(stock_total,0) AS SIGNED) - CAST(COALESCE(stock_reservado,0) AS SIGNED)';
+        $critico = (int) config('biomedhub.stock_critico_threshold', 5);
 
         return Item::query()
             ->selectRaw("id, sku, nombre, stock_total, stock_reservado, {$availableExpr} as disponible_calc")
-            ->whereRaw("{$availableExpr} <= 5")
+            ->whereRaw("{$availableExpr} <= ?", [$critico])
             ->orderByRaw("{$availableExpr} asc");
     }
 
