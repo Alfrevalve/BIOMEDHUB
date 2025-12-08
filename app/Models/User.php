@@ -28,6 +28,8 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'notify_mail' => 'boolean',
+        'notify_inapp' => 'boolean',
     ];
 
     protected static string $logName = 'user';
@@ -61,5 +63,15 @@ class User extends Authenticatable
     public function unreadMessagesCount(): int
     {
         return $this->receivedMessages()->whereNull('read_at')->count();
+    }
+
+    public function prefersMail(): bool
+    {
+        return $this->notify_mail ?? true;
+    }
+
+    public function prefersInApp(): bool
+    {
+        return $this->notify_inapp ?? true;
     }
 }

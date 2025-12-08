@@ -18,7 +18,15 @@ class MessageReceivedNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        $channels = [];
+        if (method_exists($notifiable, 'prefersInApp') ? $notifiable->prefersInApp() : true) {
+            $channels[] = 'database';
+        }
+        if (method_exists($notifiable, 'prefersMail') ? $notifiable->prefersMail() : true) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     public function toMail(object $notifiable): MailMessage

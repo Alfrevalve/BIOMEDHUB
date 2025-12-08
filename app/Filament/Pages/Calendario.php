@@ -27,6 +27,29 @@ class Calendario extends Page
 
         $events = [];
 
+        $cirugiaColor = function (?string $estado): string {
+            return match ($estado) {
+                'Pendiente' => '#0ea5e9',
+                'En curso'  => '#2563eb',
+                'Cerrada'   => '#22c55e',
+                'Reprogramada' => '#f59e0b',
+                'Cancelada' => '#9ca3af',
+                default     => '#0ea5e9',
+            };
+        };
+
+        $pedidoColor = function (?string $estado): string {
+            return match ($estado) {
+                'Solicitado'  => '#0ea5e9',
+                'Preparacion' => '#f59e0b',
+                'Despachado'  => '#6366f1',
+                'Entregado'   => '#22c55e',
+                'Devuelto'    => '#6b7280',
+                'Observado'   => '#ef4444',
+                default       => '#0ea5e9',
+            };
+        };
+
         $cirugias = Cirugia::query()
             ->when(! $isAdmin, fn ($q) => $q->where('instrumentista_id', $user?->id))
             ->whereNotNull('fecha_programada')
@@ -38,10 +61,12 @@ class Calendario extends Page
                 'title' => 'Cirugía: ' . ($c->nombre ?? 'Sin nombre'),
                 'start' => optional($c->fecha_programada)->toIso8601String(),
                 'url' => route('filament.admin.resources.cirugias.edit', $c),
-                'color' => '#0ea5e9',
+                'color' => $cirugiaColor($c->estado ?? null),
+                'textColor' => '#0b1824',
                 'extendedProps' => [
                     'institucion' => $c->institucion?->nombre,
                     'tipo' => 'Cirugía',
+                    'estado' => $c->estado,
                 ],
             ];
         }
@@ -57,7 +82,8 @@ class Calendario extends Page
                 'title' => 'Pedido: ' . ($p->codigo_pedido ?? 'Pedido'),
                 'start' => optional($p->fecha_entrega)->toIso8601String(),
                 'url' => route('filament.admin.resources.pedidos.edit', $p),
-                'color' => '#f59e0b',
+                'color' => $pedidoColor($p->estado ?? null),
+                'textColor' => '#0b1824',
                 'extendedProps' => [
                     'estado' => $p->estado,
                     'cirugia' => $p->cirugia?->nombre,

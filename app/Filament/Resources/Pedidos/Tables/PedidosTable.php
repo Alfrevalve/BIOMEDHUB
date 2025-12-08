@@ -231,7 +231,17 @@ class PedidosTable
     {
         $recipients = User::role(['logistica', 'soporte_biomedico'])->get();
         if ($recipients->isNotEmpty()) {
-            Notification::send($recipients, new PedidoTransitionNotification($pedido, $etapa));
+            // Evitar duplicados recientes (misma etapa en 5 min)
+            $recent = \Illuminate\Notifications\DatabaseNotification::query()
+                ->where('type', PedidoTransitionNotification::class)
+                ->whereJsonContains('data->pedido_id', $pedido->id)
+                ->whereJsonContains('data->etapa', $etapa)
+                ->where('created_at', '>=', now()->subMinutes(5))
+                ->exists();
+
+            if (! $recent) {
+                Notification::send($recipients, new PedidoTransitionNotification($pedido, $etapa));
+            }
         }
     }
 
@@ -239,7 +249,15 @@ class PedidosTable
     {
         $recipients = User::role(['logistica', 'soporte_biomedico'])->get();
         if ($recipients->isNotEmpty()) {
-            Notification::send($recipients, new PedidoListoDespachoNotification($pedido));
+            $recent = \Illuminate\Notifications\DatabaseNotification::query()
+                ->where('type', PedidoListoDespachoNotification::class)
+                ->whereJsonContains('data->pedido_id', $pedido->id)
+                ->where('created_at', '>=', now()->subMinutes(5))
+                ->exists();
+
+            if (! $recent) {
+                Notification::send($recipients, new PedidoListoDespachoNotification($pedido));
+            }
         }
     }
 }

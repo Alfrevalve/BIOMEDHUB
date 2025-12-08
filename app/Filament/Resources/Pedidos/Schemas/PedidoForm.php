@@ -85,6 +85,14 @@ class PedidoForm
                 TextInput::make('codigo_pedido')
                     ->hint('Se genera automaticamente si se deja vacio')
                     ->unique(ignoreRecord: true),
+                Placeholder::make('estado_observado')
+                    ->label('Estado del pedido')
+                    ->content(fn (callable $get) => $get('estado') === 'Observado'
+                        ? 'Este pedido está en Observado por falta de stock o error al reservar. Revisa disponibilidad y vuelve a guardar.'
+                        : null)
+                    ->columnSpanFull()
+                    ->hidden(fn (callable $get) => $get('estado') !== 'Observado')
+                    ->extraAttributes(['style' => 'color:#b45309;background:#fef3c7;border:1px solid #fcd34d;padding:8px 12px;border-radius:8px;']),
                 DatePicker::make('fecha'),
                 DateTimePicker::make('fecha_entrega'),
                 DateTimePicker::make('listo_despacho_at')
