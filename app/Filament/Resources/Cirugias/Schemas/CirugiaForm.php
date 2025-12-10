@@ -37,14 +37,8 @@ class CirugiaForm
                     ->preload()
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, callable $set) {
-                        $user = $state ? User::find($state) : null;
-                        if ($user) {
-                            $set('instrumentista_asignado', $user->name);
-                        }
+                        // ya no se necesita asignar texto adicional
                     }),
-                TextInput::make('instrumentista_asignado')
-                    ->label('Instrumentista (texto)')
-                    ->helperText('Se autocompleta al elegir usuario'),
                 Select::make('tipo')
                     ->options(CirugiaTipo::options())
                     ->default('Craneo')

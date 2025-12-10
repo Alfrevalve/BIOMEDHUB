@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Pedidos\Schemas;
 use App\Enums\PedidoEstado;
 use App\Enums\PedidoPrioridad;
 use App\Models\ItemKit;
+use App\Models\Item;
+use App\Models\Equipo;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
@@ -60,13 +62,48 @@ class PedidoForm
                 Repeater::make('material_detalle')
                     ->label('Materiales')
                     ->schema([
+                        Select::make('item_id')
+                            ->label('Item')
+                            ->searchable()
+                            ->options(function (callable $get) {
+                                $seleccionados = collect($get('material_detalle') ?? [])
+                                    ->pluck('item_id')
+                                    ->filter()
+                                    ->all();
+
+                                return Item::query()
+                                    ->where(function ($q) use ($seleccionados) {
+                                        $q->whereRaw('COALESCE(stock_total,0) - COALESCE(stock_reservado,0) > 0');
+                                        if (! empty($seleccionados)) {
+                                            $q->orWhereIn('id', $seleccionados);
+                                        }
+                                    })
+                                    ->orderBy('nombre')
+                                    ->get()
+                                    ->mapWithKeys(fn (Item $i) => [
+                                        $i->id => "{$i->nombre} ({$i->sku}) - disp: {$i->disponible()}",
+                                    ])
+                                    ->toArray();
+                            })
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if (! $state) {
+                                    return;
+                                }
+                                $item = Item::find($state);
+                                $set('descripcion', $item?->nombre ?? '');
+                            })
+                            ->required()
+                            ->helperText('Solo items con stock disponible y no reservados en otra cirugia.'),
                         TextInput::make('descripcion')
                             ->label('Descripcion')
-                            ->required(),
+                            ->readOnly()
+                            ->dehydrated(false)
+                            ->placeholder('Se autocompleta al elegir item'),
                         TextInput::make('cantidad')
                             ->numeric()
                             ->minValue(1)
                             ->step(1)
+                            ->maxValue(fn (callable $get) => optional(Item::find($get('item_id')))->disponible())
                             ->required(),
                     ])
                     ->columns(2)
@@ -74,11 +111,62 @@ class PedidoForm
                 Repeater::make('equipo_detalle')
                     ->label('Equipos')
                     ->schema([
-                        TextInput::make('equipo')
-                            ->required(),
+                        Select::make('equipo_id')
+                            ->label('Equipo')
+                            ->searchable()
+                            ->options(function (callable $get) {
+                                $cirugiaId = $get('cirugia_id');
+                                $seleccionados = collect($get('equipo_detalle') ?? [])
+                                    ->pluck('equipo_id')
+                                    ->filter()
+                                    ->all();
+
+                                return Equipo::query()
+                                    ->select('id', 'nombre', 'serie', 'codigo_interno')
+                                    ->when($cirugiaId, function ($q) use ($cirugiaId) {
+                                        $q->whereNotIn('id', function ($sub) use ($cirugiaId) {
+                                            $sub->select('equipo_id')
+                                                ->from('movimientos')
+                                                ->whereIn('estado_mov', ['Programado', 'En uso'])
+                                                ->whereNotNull('cirugia_id')
+                                                ->where('cirugia_id', '!=', $cirugiaId);
+                                        });
+                                    }, function ($q) {
+                                        $q->whereNotIn('id', function ($sub) {
+                                            $sub->select('equipo_id')
+                                                ->from('movimientos')
+                                                ->whereIn('estado_mov', ['Programado', 'En uso']);
+                                        });
+                                    })
+                                    ->when(! empty($seleccionados), fn ($q) => $q->orWhereIn('id', $seleccionados))
+                                    ->orderBy('nombre')
+                                    ->get()
+                                    ->mapWithKeys(function (Equipo $eq) {
+                                        $badge = $eq->serie ?: $eq->codigo_interno;
+                                        return [
+                                            $eq->id => $badge
+                                                ? "{$eq->nombre} ({$badge})"
+                                                : $eq->nombre,
+                                        ];
+                                    })
+                                    ->toArray();
+                            })
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if (! $state) {
+                                    $set('codigo', null);
+                                    return;
+                                }
+
+                                $eq = Equipo::find($state);
+                                $set('codigo', $eq?->serie ?? $eq?->codigo_interno ?? '');
+                            })
+                            ->required()
+                            ->helperText('Solo equipos libres (no programados/en uso en otra cirugia).'),
                         TextInput::make('codigo')
                             ->label('Codigo / serie')
-                            ->maxLength(100),
+                            ->maxLength(100)
+                            ->readOnly()
+                            ->placeholder('Se autocompleta al elegir equipo'),
                     ])
                     ->columns(2)
                     ->collapsible(),

@@ -66,8 +66,9 @@ class CirugiasTable
                     ->label('Cirujano')
                     ->searchable()
                     ->limit(40),
-                TextColumn::make('instrumentista_asignado')
+                TextColumn::make('instrumentista.name')
                     ->label('Instrumentista')
+                    ->sortable()
                     ->searchable()
                     ->limit(40),
                 TextColumn::make('paciente_codigo')

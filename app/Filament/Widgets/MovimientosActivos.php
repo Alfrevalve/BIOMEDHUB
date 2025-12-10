@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 class MovimientosActivos extends TableWidget
 {
     protected static ?string $heading = 'Movimientos activos';
+    protected static bool $isDiscovered = false;
 
     protected function getTableQuery(): Builder
     {

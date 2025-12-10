@@ -13,24 +13,80 @@ use App\Models\Equipo;
 use App\Models\Item;
 use App\Models\Movimiento;
 use App\Models\Pedido;
+use Filament\Schemas\Components\Html;
+use Filament\Schemas\Schema;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class DashboardStats extends BaseWidget
 {
+    public string $period = 'week';
+
+    public function content(Schema $schema): Schema
+    {
+        $buttons = collect([
+            'week' => 'Semana',
+            'month' => 'Mes',
+            'year' => 'Año',
+        ])->map(fn ($label, $key) => sprintf(
+            '<button type="button" wire:click.prevent="setPeriod(\'%s\')" class="bh-period-btn %s">%s</button>',
+            $key,
+            $this->period === $key ? 'is-active' : '',
+            $label
+        ))->implode('');
+
+        return $schema->components([
+            Html::make('<div class="bh-period-switch"><span class="bh-period-label">Periodo</span><div class="bh-period-buttons">'.$buttons.'</div></div>'),
+            $this->getSectionContentComponent(),
+        ]);
+    }
+
+    public function setPeriod(string $period): void
+    {
+        $this->period = $period;
+        $this->cachedStats = null;
+    }
+
+    private function getRange(): array
+    {
+        $now = now();
+        $period = $this->period ?? 'week';
+
+        return match ($period) {
+            'month' => [$now->clone()->startOfMonth(), $now->clone()->endOfMonth()],
+            'year' => [$now->clone()->startOfYear(), $now->clone()->endOfYear()],
+            default => [$now->clone()->startOfWeek(), $now->clone()->endOfWeek()],
+        };
+    }
+
+    private function rangeLabel(): string
+    {
+        return match ($this->period ?? 'week') {
+            'month' => 'este mes',
+            'year' => 'este Año',
+            default => 'esta semana',
+        };
+    }
+
+    protected function getViewData(): array
+    {
+        return [
+            'period' => $this->period,
+        ];
+    }
+
     protected function getStats(): array
     {
+        [$from, $to] = $this->getRange();
+        $label = $this->rangeLabel();
         $now = now();
 
         $cirugiasHoy = Cirugia::query()
-            ->whereDate('fecha_programada', $now->toDateString())
+            ->whereBetween('fecha_programada', [$from, $to])
             ->where('estado', '!=', 'Cancelada')
             ->count();
 
-        $cirugiasProximas = Cirugia::query()
-            ->whereBetween('fecha_programada', [$now, $now->copy()->addDays(7)])
-            ->where('estado', '!=', 'Cancelada')
-            ->count();
+        $cirugiasProximas = $cirugiasHoy;
 
         $pedidosPendientes = Pedido::query()
             ->whereNotIn('estado', ['Entregado', 'Anulado'])
@@ -41,14 +97,14 @@ class DashboardStats extends BaseWidget
             ->count();
 
         $pedidosEntregaHoy = Pedido::query()
-            ->whereDate('fecha_entrega', $now->toDateString())
+            ->whereBetween('fecha_entrega', [$from, $to])
             ->whereNotIn('estado', ['Entregado', 'Anulado'])
             ->count();
 
         $pedidosAtrasados = Pedido::query()
             ->whereNotIn('estado', ['Entregado', 'Anulado', 'Devuelto'])
             ->whereNotNull('fecha_entrega')
-            ->where('fecha_entrega', '<', $now)
+            ->whereBetween('fecha_entrega', [$from, $to])
             ->count();
 
         $movimientosActivos = Movimiento::query()
@@ -72,15 +128,18 @@ class DashboardStats extends BaseWidget
 
         $listosDespacho = Pedido::query()
             ->whereNotNull('listo_despacho_at')
+            ->whereBetween('listo_despacho_at', [$from, $to])
             ->whereIn('estado', ['Solicitado', 'Preparacion', 'Despachado'])
             ->count();
 
         $recojosSolicitados = Movimiento::query()
             ->whereNotNull('recogida_solicitada_at')
+            ->whereBetween('recogida_solicitada_at', [$from, $to])
             ->whereIn('estado_mov', ['Devuelto', 'En uso', 'Programado'])
             ->count();
 
         $consumosSinFacturar = CirugiaReporte::query()
+            ->whereBetween('created_at', [$from, $to])
             ->whereHas('cirugia.pedidos', fn ($q) => $q->whereNotIn('estado', ['Devuelto', 'Anulado']))
             ->count();
 
@@ -104,16 +163,11 @@ class DashboardStats extends BaseWidget
                 ->extraAttributes(['style' => $consumosSinFacturar > 0
                     ? 'background:linear-gradient(135deg,#e11d48,#be123c);color:#fff'
                     : 'background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff']),
-            Stat::make('Cirugias hoy', $cirugiasHoy)
-                ->description('Programadas hoy')
+            Stat::make('Cirugias', $cirugiasHoy)
+                ->description("Programadas en {$label}")
                 ->icon('heroicon-o-heart')
                 ->url(CirugiaResource::getUrl())
                 ->extraAttributes(['style' => 'background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff']),
-            Stat::make('Cirugias proximas (7d)', $cirugiasProximas)
-                ->description('Agenda inmediata')
-                ->icon('heroicon-o-heart')
-                ->url(CirugiaResource::getUrl())
-                ->extraAttributes(['style' => 'background:linear-gradient(135deg,#0ea5e9,#14b8a6);color:#fff']),
             Stat::make('Pedidos pendientes', $pedidosPendientes)
                 ->description('Logistica abierta')
                 ->icon('heroicon-o-inbox-stack')
@@ -125,7 +179,7 @@ class DashboardStats extends BaseWidget
                 ->url(PedidoResource::getUrl())
                 ->extraAttributes(['style' => 'background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff']),
             Stat::make('Entrega hoy', $pedidosEntregaHoy)
-                ->description('Planificados hoy')
+                ->description("Planificados en {$label}")
                 ->icon('heroicon-o-inbox')
                 ->url(PedidoResource::getUrl())
                 ->extraAttributes(['style' => 'background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff']),
@@ -164,7 +218,6 @@ class DashboardStats extends BaseWidget
 
     protected function getColumns(): int|array
     {
-        // 5 tarjetas por fila en pantallas grandes, menos en móviles.
         return [
             'default' => 1,
             'md' => 3,

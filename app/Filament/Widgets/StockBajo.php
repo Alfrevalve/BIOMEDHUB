@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 class StockBajo extends TableWidget
 {
     protected int|string|array $columnSpan = 'full';
+    protected static bool $isDiscovered = false;
 
     protected function getTableQuery(): Builder
     {

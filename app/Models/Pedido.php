@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use App\Models\Movimiento;
 
 class Pedido extends Model
 {
@@ -120,6 +121,43 @@ class Pedido extends Model
     public function reservas()
     {
         return $this->hasMany(Reserva::class);
+    }
+
+    public function crearMovimientosEquipos(): void
+    {
+        $equipos = collect($this->equipo_detalle ?? [])
+            ->filter(fn ($row) => ! empty($row['equipo_id']))
+            ->all();
+
+        if (empty($equipos)) {
+            return;
+        }
+
+        $institucionId = $this->cirugia?->institucion_id;
+
+        foreach ($equipos as $row) {
+            $equipoId = $row['equipo_id'];
+
+            $existe = Movimiento::query()
+                ->where('pedido_id', $this->id)
+                ->where('equipo_id', $equipoId)
+                ->whereNotIn('estado_mov', ['Devuelto'])
+                ->exists();
+
+            if ($existe) {
+                continue;
+            }
+
+            Movimiento::create([
+                'equipo_id' => $equipoId,
+                'cirugia_id' => $this->cirugia_id,
+                'pedido_id' => $this->id,
+                'institucion_id' => $institucionId,
+                'estado_mov' => 'Programado',
+                'fecha_salida' => now(),
+                'material_enviado' => $this->material_detalle,
+            ]);
+        }
     }
 
     /** Inventario */

@@ -9,6 +9,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\FileUpload;
 use Filament\Schemas\Schema;
 
 class MovimientoForm
@@ -57,7 +58,16 @@ class MovimientoForm
                     ->columnSpanFull(),
                 TextInput::make('entregado_por'),
                 TextInput::make('recibido_por'),
-                TextInput::make('documento_soporte'),
+                FileUpload::make('documento_soporte')
+                    ->label('Documento soporte (foto guia firmada)')
+                    ->directory('documentos-soporte')
+                    ->disk('public')
+                    ->image()
+                    ->imageEditor()
+                    ->maxSize(5120)
+                    ->visibility('public')
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->helperText('Sube una foto de la guia firmada (jpg, png, webp, max 5MB).'),
             ]);
     }
 }

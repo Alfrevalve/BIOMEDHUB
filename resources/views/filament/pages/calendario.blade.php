@@ -1,31 +1,107 @@
 <x-filament-panels::page>
     <div class="flex flex-col gap-4">
-        <div class="flex items-center justify-between">
-            <div>
+        <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 <h2 class="text-lg font-semibold text-slate-800">Calendario operativo</h2>
-                <p class="text-sm text-slate-500">Cirugías y entregas programadas. Los usuarios ven solo sus asignaciones; admins ven todo.</p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ \App\Filament\Resources\Cirugias\CirugiaResource::getUrl('create') }}" class="cal-btn">Crear cirugía</a>
+                    <a href="{{ \App\Filament\Resources\Pedidos\PedidoResource::getUrl('create') }}" class="cal-btn">Crear pedido</a>
+                </div>
             </div>
-            <div class="flex flex-wrap gap-2 text-xs items-center">
-                <label class="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-700 cursor-pointer">
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+                <label class="cal-chip">
                     <input type="checkbox" id="filter-cirugias" checked class="accent-sky-500">
                     Cirugías
                 </label>
-                <label class="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-700 cursor-pointer">
+                <label class="cal-chip">
                     <input type="checkbox" id="filter-pedidos" checked class="accent-amber-500">
                     Pedidos
                 </label>
-                <div class="flex flex-wrap gap-2">
-                    <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-700"><span class="w-3 h-3 rounded-full" style="background:#0ea5e9"></span>Pendiente/Solicitado</div>
-                    <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-700"><span class="w-3 h-3 rounded-full" style="background:#2563eb"></span>En curso</div>
-                    <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-700"><span class="w-3 h-3 rounded-full" style="background:#22c55e"></span>Cerrada/Entregado</div>
-                    <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-700"><span class="w-3 h-3 rounded-full" style="background:#f59e0b"></span>Reprogramada/Preparación</div>
-                    <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-700"><span class="w-3 h-3 rounded-full" style="background:#ef4444"></span>Observado</div>
-                    <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-700"><span class="w-3 h-3 rounded-full" style="background:#9ca3af"></span>Cancelada/Devuelto</div>
-                </div>
+                <details class="cal-legend">
+                    <summary>Ver leyenda</summary>
+                    <div class="cal-legend-grid">
+                        <div class="cal-legend-item"><span class="cal-dot" style="background:#0ea5e9"></span><span>Pendiente / Solicitado</span></div>
+                        <div class="cal-legend-item"><span class="cal-dot" style="background:#2563eb"></span><span>En curso</span></div>
+                        <div class="cal-legend-item"><span class="cal-dot" style="background:#22c55e"></span><span>Cerrada / Entregado</span></div>
+                        <div class="cal-legend-item"><span class="cal-dot" style="background:#f59e0b"></span><span>Reprogramada / Preparación</span></div>
+                        <div class="cal-legend-item"><span class="cal-dot" style="background:#ef4444"></span><span>Observado</span></div>
+                        <div class="cal-legend-item"><span class="cal-dot" style="background:#9ca3af"></span><span>Cancelada / Devuelto</span></div>
+                        <div class="cal-legend-item"><span class="cal-dot" style="background:#6366f1"></span><span>Despachado</span></div>
+                    </div>
+                </details>
             </div>
         </div>
         <div id="calendar" class="bg-white rounded-xl shadow-sm border border-slate-200 p-2"></div>
     </div>
+
+    <style>
+        .cal-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 36px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: #0dbdf0;
+            color: #0b2f3b;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .cal-btn:hover {
+            background: #0cc0f5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+        .cal-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .cal-chip input {
+            margin: 0;
+        }
+        .cal-legend {
+            font-size: 12px;
+            color: #0f172a;
+            cursor: pointer;
+        }
+        .cal-legend summary {
+            list-style: none;
+            outline: none;
+        }
+        .cal-legend[open] summary {
+            margin-bottom: 6px;
+        }
+        .cal-legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 6px 12px;
+        }
+        .cal-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 6px;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+        .cal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            display: inline-block;
+        }
+    </style>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
@@ -35,7 +111,6 @@
             if (!calendarEl) return;
 
             const events = @js($eventsJson ? json_decode($eventsJson, true) : []);
-
             let filteredEvents = events;
 
             const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -73,8 +148,11 @@
                 const showCir = document.getElementById('filter-cirugias')?.checked ?? true;
                 const showPed = document.getElementById('filter-pedidos')?.checked ?? true;
                 filteredEvents = events.filter(ev => {
-                    if (ev.extendedProps?.tipo === 'Cirugía') return showCir;
-                    if (ev.extendedProps?.tipo === 'Pedido') return showPed;
+                    const tipo = (ev.extendedProps?.tipo || '').toString().toLowerCase();
+                    const isCir = tipo.includes('cirug');
+                    const isPed = tipo.includes('pedido');
+                    if (isCir) return showCir;
+                    if (isPed) return showPed;
                     return true;
                 });
                 calendar.removeAllEventSources();

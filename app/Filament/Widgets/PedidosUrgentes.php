@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 class PedidosUrgentes extends TableWidget
 {
     protected static ?string $heading = 'Pedidos urgentes';
+    protected static bool $isDiscovered = false;
 
     protected function getTableQuery(): Builder
     {

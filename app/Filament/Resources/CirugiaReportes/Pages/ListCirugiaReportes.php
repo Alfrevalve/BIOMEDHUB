@@ -13,6 +13,12 @@ class ListCirugiaReportes extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('crear')
+                ->label('Crear')
+                ->color('primary')
+                ->icon('heroicon-o-plus')
+                ->url(fn () => static::getResource()::getUrl('create'))
+                ->visible(fn () => static::getResource()::canCreate()),
             Actions\Action::make('export_csv')
                 ->label('Exportar CSV')
                 ->icon('heroicon-o-arrow-down-tray')

@@ -19,7 +19,6 @@ class Cirugia extends Model
         'fecha_programada',
         'estado',
         'cirujano_principal',
-        'instrumentista_asignado',
         'instrumentista_id',
         'tipo',
         'crear_pedido_auto',
@@ -57,9 +56,7 @@ class Cirugia extends Model
     protected static function booted(): void
     {
         static::saving(function (Cirugia $cirugia) {
-            if ($cirugia->instrumentista && $cirugia->isDirty('instrumentista_id')) {
-                $cirugia->instrumentista_asignado = $cirugia->instrumentista->name;
-            }
+            // ya no se mantiene un campo de texto separado para instrumentista
         });
     }
 

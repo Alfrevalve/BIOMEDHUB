@@ -171,6 +171,7 @@ class PedidosTable
                                 'transportista_contacto' => $data['transportista_contacto'],
                             ]);
 
+                            $record->crearMovimientosEquipos();
                             self::notifyListoDespacho($record);
                         }),
                     Action::make('a_despachado')
